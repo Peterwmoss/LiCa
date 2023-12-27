@@ -22,7 +22,7 @@ func Get() *bun.DB {
 		User:     "postgres",
 		Password: "postgres",
 		Database: "lica",
-		Addr:     "localhost:5432",
+		Addr:     "localhost:5433",
 	}
 
 	return connect(config)
