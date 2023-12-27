@@ -14,6 +14,8 @@ make get
 make run # (or just: make)
 ```
 
-To stop the postgres container simply do: `make postgres-stop`
+The password for the local postgres container is running on port `5433`, with password: `postgres` and database: `lica`.
 
-And to remove the container completely, do: `make postgres-rm`
+To stop the postgres container simply do: `make postgres-stop`.
+
+And to remove the container completely, do: `make postgres-rm`.
