@@ -2,43 +2,33 @@ package main
 
 import (
 	"context"
+	"os"
 
-	"github.com/Peterwmoss/LiCa/database"
-	"github.com/Peterwmoss/LiCa/repository"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
+	"github.com/Peterwmoss/LiCa/api"
+	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
+func init() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).With().Caller().Logger()
+
+	log.Info().Msg("Loading env variables")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal().Msgf("Failed to load .env: %s", err)
+	}
+}
+
 func main() {
-  ctx := context.Background()
+	ctx := context.Background()
 
-  app := fiber.New()
-
-  db := database.Get()
-  defer db.Close()
-
-  database.CreateSchema(ctx)
-
-  err := database.Seed(ctx)
-  if err != nil {
-    log.Fatal(err)
-  }
-
-  app.Get("/items", func (c *fiber.Ctx) error {
-    items, err := repository.Items(db, ctx)
-    if err != nil {
-      log.Warn(err)
-    }
-    return c.JSON(items)
-  })
-
-  app.Get("/categories", func (c *fiber.Ctx) error {
-    categories, err := repository.Categories(db, ctx)
-    if err != nil {
-      log.Warn(err)
-    }
-    return c.JSON(categories)
-  })
-
-  log.Fatal(app.Listen(":3000"))
+  err := api.Start(3000, ctx)
+	if err != nil {
+		log.Fatal().Msg("Failed to start api")
+	}
 }

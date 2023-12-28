@@ -13,7 +13,7 @@ type Item struct {
 	Name       string    `bun:",unique,notnull" json:"name,omitempty"`
 	CategoryId int64     `bun:",notnull" json:"-"`
 	Category   *Category `bun:"rel:has-one,join:category_id=id" json:"category,omitempty"`
-  UserId     *int64     `json:"-"`
+	UserId     *int64    `json:"-"`
 	User       *User     `bun:"rel:has-one,join:user_id=id" json:"user,omitempty"`
 }
 
@@ -24,19 +24,19 @@ func (item *Item) String() string {
 type User struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 
-  Id   int64  `bun:",pk,autoincrement" json:"id"`
-	Name string `bun:",unique,notnull" json:"name"`
+	Id    int64  `bun:",pk,autoincrement" json:"id"`
+	Email string `bun:",unique,notnull" json:"email"`
 }
 
 func (user *User) String() string {
-	return fmt.Sprintf("Id: %d, Name: %s", user.Id, user.Name)
+	return fmt.Sprintf("Id: %d, Email: %s", user.Id, user.Email)
 }
 
 type Category struct {
 	bun.BaseModel `bun:"table:categories,alias:c"`
 
 	Id   int64  `bun:",pk,autoincrement" json:"id"`
-  Name string `bun:",unique,notnull" json:"name"`
+	Name string `bun:",unique,notnull" json:"name"`
 }
 
 func (category *Category) String() string {

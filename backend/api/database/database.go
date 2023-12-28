@@ -1,9 +1,9 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"context"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
@@ -39,12 +39,12 @@ func CreateSchema(ctx context.Context) error {
 	defer db.Close()
 
 	for _, model := range models {
-    _, err := db.
-      NewCreateTable().
-      Model(model).
-      IfNotExists().
-      WithForeignKeys().
-      Exec(ctx)
+		_, err := db.
+			NewCreateTable().
+			Model(model).
+			IfNotExists().
+			WithForeignKeys().
+			Exec(ctx)
 		if err != nil {
 			return err
 		}
@@ -53,8 +53,8 @@ func CreateSchema(ctx context.Context) error {
 }
 
 func connect(config *DbConfig) *bun.DB {
-  dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", config.User, config.Password, config.Addr, config.Database)
-  sqlDb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", config.User, config.Password, config.Addr, config.Database)
+	sqlDb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqlDb, pgdialect.New())
 	return db
 }

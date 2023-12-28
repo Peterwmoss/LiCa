@@ -7,14 +7,12 @@ import (
 	"github.com/uptrace/bun"
 )
 
-func Seed(ctx context.Context) error {
-	db := Get()
-	defer db.Close()
-
+func Seed(db *bun.DB, ctx context.Context) error {
 	err := seedCategories(db, ctx)
 	if err != nil {
 		return err
 	}
+
 	err = seedItems(db, ctx)
 	if err != nil {
 		return err
@@ -194,19 +192,19 @@ func seedItems(db *bun.DB, ctx context.Context) error {
 
 func findCategoryByName(name string, db *bun.DB, ctx context.Context) *Category {
 	category := &Category{}
-  err := db.NewSelect().
-    Model(category).
-    Where("name = ?", name).
-    Limit(1).
-    Scan(ctx)
+	err := db.NewSelect().
+		Model(category).
+		Where("name = ?", name).
+		Limit(1).
+		Scan(ctx)
 
 	if err != nil {
-    log.Fatal(err)
+		log.Fatal(err)
 	}
 
-  if category == nil {
+	if category == nil {
 		log.Fatal("Could not find category with name. Failed to seed")
-  }
+	}
 
 	return category
 }
@@ -214,12 +212,12 @@ func findCategoryByName(name string, db *bun.DB, ctx context.Context) *Category 
 func insertNoDuplicates[T interface{}](db *bun.DB, models []T, ctx context.Context) error {
 	for _, model := range models {
 		_, err := db.
-      NewInsert().
-      Model(&model).
-      On("CONFLICT DO NOTHING").
-      Exec(ctx)
+			NewInsert().
+			Model(&model).
+			On("CONFLICT DO NOTHING").
+			Exec(ctx)
 		if err != nil {
-      return err
+			return err
 		}
 	}
 
