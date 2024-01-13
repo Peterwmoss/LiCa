@@ -1,12 +1,17 @@
+REQUIRED_BINS := air
+
+$(foreach bin,$(REQUIRED_BINS),\
+    $(if $(shell command -v $(bin) 2> /dev/null),,$(error Please install `$(bin)`)))
+
 all: run
 
 get:
 	go get ./cmd/server
 
-run: postgres-start
+run: get postgres-start
 	air
 
-t:
+generate:
 	templ generate
 
 postgres-start:
