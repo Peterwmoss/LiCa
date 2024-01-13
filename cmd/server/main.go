@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/pkgerrors"
 
 	"github.com/Peterwmoss/LiCa/internal/database"
+	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/Peterwmoss/LiCa/internal/functions/auth"
 	"github.com/Peterwmoss/LiCa/internal/functions/home"
 	"github.com/Peterwmoss/LiCa/internal/functions/list"
@@ -46,7 +47,7 @@ func main() {
 
   app.Static("/public", "./internal/assets/public")
 
-  homeHandler := home.NewHandler(user.NewService())
+  homeHandler := home.NewHandler(domain.NewUserService())
   homeHandler.Mount(app)
 
   listHandler := list.NewHandler(db, ctx)

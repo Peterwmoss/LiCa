@@ -1,9 +1,9 @@
 package home
 
 import (
+	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/Peterwmoss/LiCa/internal/functions"
 	"github.com/Peterwmoss/LiCa/internal/functions/auth"
-	"github.com/Peterwmoss/LiCa/internal/functions/user"
 	"github.com/Peterwmoss/LiCa/internal/templates/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
@@ -16,11 +16,11 @@ type (
 	}
 
 	handler struct {
-		userService user.Service
+		userService domain.UserService
 	}
 )
 
-func NewHandler(userService user.Service) Handler {
+func NewHandler(userService domain.UserService) Handler {
 	return &handler{userService}
 }
 

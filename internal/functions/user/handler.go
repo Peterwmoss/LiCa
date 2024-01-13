@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/Peterwmoss/LiCa/internal/functions"
 	"github.com/Peterwmoss/LiCa/internal/templates/partials"
 	"github.com/gofiber/fiber/v2"
@@ -13,7 +14,7 @@ type (
   }
 
   handler struct { 
-    userService Service
+    userService domain.UserService
   }
 )
 
