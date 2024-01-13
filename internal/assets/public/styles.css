@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
+
+:root {
+  --spacing1: 5px;
+  --spacing2: calc(var(--spacing1) * 2);
+  --spacing3: calc(var(--spacing2) * 2);
+  --spacing4: calc(var(--spacing3) * 2);
+  --spacing5: calc(var(--spacing4) * 2);
+}
+
+html, body, * {
+  font-family: 'Roboto';
+}
+
+div {
+  display: flex;
+  flex-direction: column;
+}
+
+.p1 {
+  padding: var(--spacing1);
+}
+
+.p2 {
+  padding: var(--spacing2);
+}
+
+.p3 {
+  padding: var(--spacing3);
+}
+
+.p4 {
+  padding: var(--spacing4);
+}
+
+.p5 {
+  padding: var(--spacing5);
+}
+
+.m1 {
+  margin: var(--spacing1);
+}
+
+.m2 {
+  margin: var(--spacing2);
+}
+
+.m3 {
+  margin: var(--spacing3);
+}
+
+.m4 {
+  margin: var(--spacing4);
+}
+
+.m5 {
+  margin: var(--spacing5);
+}

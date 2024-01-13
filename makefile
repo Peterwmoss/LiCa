@@ -1,17 +1,17 @@
-all: clean run
+all: run
 
 get:
-	go get .
+	go get ./cmd/server
 
-build: get
-	go build -o ./bin/LiCa
+run: postgres-start
+	air
 
-run: build postgres-start
-	./bin/LiCa
+t:
+	templ generate
 
 postgres-start:
 	@printf "Creating postgres container, or reusing existing\n"
-	@(docker run -itd --name lica-postgres -p 5433:5432 -e POSTGRES_PASSWORD=postgres postgres &> /dev/null && sleep 1) || docker start lica-postgres
+	@(docker run -itd --name lica-postgres -p 5433:5432 -e POSTGRES_PASSWORD=postgres postgres &> /dev/null && sleep 1) || (docker start lica-postgres && sleep 1)
 	@printf "Creating database if it does not exist\n"
 	@docker exec -it lica-postgres psql -U postgres -d postgres -c "CREATE DATABASE lica;" &> /dev/null || true
 

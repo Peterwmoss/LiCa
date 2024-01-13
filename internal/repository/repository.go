@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/Peterwmoss/LiCa/database"
+	"github.com/Peterwmoss/LiCa/internal/database"
 	"github.com/uptrace/bun"
 )
 
