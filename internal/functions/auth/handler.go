@@ -19,7 +19,6 @@ type (
 		Login(*fiber.Ctx) error
 		Logout(*fiber.Ctx) error
 		Callback(*fiber.Ctx) error
-		Info(*fiber.Ctx) error
 	}
 
 	handler struct {
@@ -50,7 +49,6 @@ func (h handler) Mount(app *fiber.App) {
 	app.Get(h.baseUrl+"/login", h.Login)
 	app.Get(h.baseUrl+"/logout", h.Logout)
 	app.Get(h.baseUrl+"/callback", h.Callback)
-	app.Get(h.baseUrl+"/info", h.Info)
 }
 
 func (h handler) Login(ctx *fiber.Ctx) error {
@@ -97,24 +95,4 @@ func (h handler) Logout(ctx *fiber.Ctx) error {
 		Value: "",
 	})
 	return ctx.SendStatus(fiber.StatusOK)
-}
-
-func (h handler) Info(ctx *fiber.Ctx) error {
-	token := ctx.Cookies("token")
-	if token == "" {
-		return ctx.Status(fiber.StatusTemporaryRedirect).Redirect("/auth/login")
-	}
-
-	info, err := GetUserInfo(token)
-	if err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	user, err := repository.GetUser(info.Email, h.db, h.ctx)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to create user")
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	return ctx.JSON(user)
 }

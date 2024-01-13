@@ -22,12 +22,12 @@ func NewService() Service {
 func (u service) Get(token string) (domain.User, error) {
   userInfo, err := auth.GetUserInfo(token)
   if err != nil {
-    return nil, err
+    return domain.User{}, err
   }
   log.Info().Msgf("User: %s", userInfo.Email)
 
-  return domain.NewUser(
-    userInfo.Email,
-    userInfo.Picture,
-  ), nil
+  return domain.User{
+    Email: userInfo.Email,
+    Picture: userInfo.Picture,
+  }, nil
 }

@@ -3,5 +3,6 @@ package partials
 import "github.com/Peterwmoss/LiCa/internal/domain"
 
 templ User(user domain.User) {
-  <p>Email: { user.Email() }</p>
+	<img src={ user.Picture } class={ "profilePicture" }/>
+	<p>Email: { user.Email }</p>
 }
