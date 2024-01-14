@@ -12,6 +12,7 @@ import (
 type (
 	Handler interface {
 		GetAll(*fiber.Ctx) error
+		Create(*fiber.Ctx) error
 		Mount(*fiber.App)
 	}
 
@@ -30,12 +31,29 @@ func (h handler) Mount(app *fiber.App) {
 	app.Use("/lists", authMiddleware.Known)
 
 	app.Get("/lists", h.GetAll)
+	app.Post("/lists", h.Create)
 }
 
 func (h handler) GetAll(ctx *fiber.Ctx) error {
 	user := ctx.Locals("user").(*domain.User)
 
 	lists, err := h.listService.GetAll(*user)
+	if err != nil {
+		return err
+	}
+
+	if functions.IsHTMXRequest(ctx) {
+		return functions.ToHandler(partials.Lists(lists))(ctx)
+	}
+
+	return ctx.SendStatus(fiber.StatusNotFound)
+}
+
+func (h handler) Create(ctx *fiber.Ctx) error {
+	user := ctx.Locals("user").(*domain.User)
+
+  name := ctx.FormValue("name")
+	lists, err := h.listService.Create(name, *user)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,10 @@
+package partials
+
+templ Modal(id string) {
+	<script>
+    addOnClickOutsideListener(`#${id}`, () => hide(id))
+  </script>
+	<div id={ id }>
+		{ children... }
+	</div>
+}
