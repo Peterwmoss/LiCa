@@ -1,44 +1,48 @@
 package list
 
 import (
-	"context"
-
+	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/Peterwmoss/LiCa/internal/functions"
-	"github.com/Peterwmoss/LiCa/internal/repository"
+	"github.com/Peterwmoss/LiCa/internal/middleware"
+
 	"github.com/Peterwmoss/LiCa/internal/templates/partials"
 	"github.com/gofiber/fiber/v2"
-	"github.com/uptrace/bun"
 )
 
 type (
-  Handler interface {
-    GetAll(*fiber.Ctx) error
-    Mount(*fiber.App)
-  }
+	Handler interface {
+		GetAll(*fiber.Ctx) error
+		Mount(*fiber.App)
+	}
 
-  handler struct {
-    db *bun.DB
-    ctx context.Context
-  }
+	handler struct {
+		listService domain.ListService
+		userService domain.UserService
+	}
 )
 
-func NewHandler(db *bun.DB, ctx context.Context) Handler {
-  return &handler{ db, ctx }
+func NewHandler(listService domain.ListService, userService domain.UserService) Handler {
+	return &handler{listService, userService}
 }
 
 func (h handler) Mount(app *fiber.App) {
-  app.Get("/list", h.GetAll)
+	authMiddleware := middleware.NewAuth(h.userService)
+	app.Use("/lists", authMiddleware.Known)
+
+	app.Get("/lists", h.GetAll)
 }
 
 func (h handler) GetAll(ctx *fiber.Ctx) error {
-  items, err := repository.GetItems(h.db, h.ctx)
-  if err != nil {
-    return err
-  }
+	user := ctx.Locals("user").(*domain.User)
 
-  if functions.IsHTMXRequest(ctx) {
-    return functions.ToHandler(partials.Items(items))(ctx)
-  }
+	lists, err := h.listService.GetAll(*user)
+	if err != nil {
+		return err
+	}
 
-  return ctx.SendStatus(fiber.StatusNotFound)
+	if functions.IsHTMXRequest(ctx) {
+		return functions.ToHandler(partials.Lists(lists))(ctx)
+	}
+
+	return ctx.SendStatus(fiber.StatusNotFound)
 }

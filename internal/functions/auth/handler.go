@@ -4,10 +4,10 @@ import (
 	"context"
 	"os"
 
-	"github.com/Peterwmoss/LiCa/internal/repository"
+	"github.com/Peterwmoss/LiCa/internal/auth"
+	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
-	"github.com/uptrace/bun"
 	"golang.org/x/oauth2"
 )
 
@@ -22,23 +22,23 @@ type (
 	}
 
 	handler struct {
-		authConfig *oauth2.Config
-		db         *bun.DB
-		ctx        context.Context
-		stateCheck string
-		baseUrl    string
+		authConfig  *oauth2.Config
+		userService domain.UserService
+		ctx         context.Context
+		stateCheck  string
+		baseUrl     string
 	}
 )
 
-func NewHandler(db *bun.DB, ctx context.Context) Handler {
+func NewHandler(userService domain.UserService, ctx context.Context) Handler {
 	stateCheck := os.Getenv("LICA_STATE_CHECK")
 	if stateCheck == "" {
 		stateCheck = "a8e7hfwnkf3"
 	}
 
 	return &handler{
-		authConfig{}.Get(),
-		db,
+		auth.NewAuthConfig(BASE_URL).Get(),
+		userService,
 		ctx,
 		stateCheck,
 		BASE_URL,
@@ -70,15 +70,9 @@ func (h handler) Callback(ctx *fiber.Ctx) error {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	info, err := GetUserInfo(token.AccessToken)
+	_, err = h.userService.GetOrCreate(token.AccessToken)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to get user info from Google")
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-
-	_, err = repository.CreateUser(info.Email, h.db, h.ctx)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to create user")
+		log.Error().Err(err).Msg("Failed to get user, see error for more details: ")
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
 

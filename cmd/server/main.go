@@ -37,29 +37,35 @@ func main() {
 	db := database.Get()
 	defer db.Close()
 
-  if err := database.CreateSchema(ctx); err != nil {
+	if err := database.CreateSchema(ctx); err != nil {
 		log.Fatal().Err(err).Msg("Failed to create schema")
-  }
+	}
 
-  if err := database.Seed(db, ctx); err != nil {
+	if err := database.Seed(db, ctx); err != nil {
 		log.Fatal().Err(err).Msg("Failed to seed data")
-  }
+	}
 
-  app.Static("/public", "./internal/assets/public")
+	app.Static("/public", "./internal/assets/public")
 
-  homeHandler := home.NewHandler(domain.NewUserService())
-  homeHandler.Mount(app)
+	userService := domain.NewUserService(db, ctx)
+	categoryService := domain.NewCategoryService(db, ctx)
+	productService := domain.NewProductService(db, ctx, categoryService)
+	listItemService := domain.NewListItemService(productService)
+	listService := domain.NewListService(db, ctx, listItemService)
 
-  listHandler := list.NewHandler(db, ctx)
-  listHandler.Mount(app)
+	homeHandler := home.NewHandler(userService)
+	homeHandler.Mount(app)
 
-  authHandler := auth.NewHandler(db, ctx)
-  authHandler.Mount(app)
+	listHandler := list.NewHandler(listService, userService)
+	listHandler.Mount(app)
 
-  userHandler := user.NewHandler()
-  userHandler.Mount(app)
+	authHandler := auth.NewHandler(userService, ctx)
+	authHandler.Mount(app)
 
-  if err := app.Listen(":3000"); err != nil {
+	userHandler := user.NewHandler()
+	userHandler.Mount(app)
+
+	if err := app.Listen(":3000"); err != nil {
 		log.Fatal().Msg("Failed to start api")
 	}
 }

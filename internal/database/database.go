@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -31,8 +32,14 @@ func Get() *bun.DB {
 func CreateSchema(ctx context.Context) error {
 	models := []interface{}{
 		(*User)(nil),
+
 		(*Category)(nil),
-		(*Item)(nil),
+		(*CategoryOrder)(nil),
+
+		(*Product)(nil),
+
+		(*List)(nil),
+		(*ListItem)(nil),
 	}
 
 	db := Get()
@@ -46,6 +53,7 @@ func CreateSchema(ctx context.Context) error {
 			WithForeignKeys().
 			Exec(ctx)
 		if err != nil {
+      log.Error().Err(err).Msgf("Error while creating table for model: %s", model)
 			return err
 		}
 	}

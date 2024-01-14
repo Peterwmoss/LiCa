@@ -37,5 +37,5 @@ func (h handler) Get(ctx *fiber.Ctx) error {
 		return ctx.Redirect(auth.BASE_URL+"/login", fiber.StatusTemporaryRedirect)
 	}
 
-	return functions.ToHandler(pages.HomePage(user))(ctx)
+	return functions.ToHandler(pages.HomePage(*user))(ctx)
 }

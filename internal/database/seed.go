@@ -44,7 +44,7 @@ func seedCategories(db *bun.DB, ctx context.Context) error {
 }
 
 func seedItems(db *bun.DB, ctx context.Context) error {
-	items := []Item{
+	items := []Product{
 		{Name: "mælk", CategoryId: findCategoryByName("mejeri", db, ctx).Id},
 		{Name: "smør", CategoryId: findCategoryByName("mejeri", db, ctx).Id},
 		{Name: "smørbart", CategoryId: findCategoryByName("mejeri", db, ctx).Id},

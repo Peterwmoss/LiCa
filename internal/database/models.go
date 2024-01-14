@@ -1,44 +1,69 @@
 package database
 
 import (
-	"fmt"
-
 	"github.com/uptrace/bun"
 )
 
-type Item struct {
-	bun.BaseModel `bun:"table:items,alias:i"`
+type (
+	Product struct {
+		bun.BaseModel `bun:"table:products,alias:p"`
 
-	Id         int64     `bun:",pk,autoincrement" json:"id"`
-	Name       string    `bun:",unique,notnull" json:"name,omitempty"`
-	CategoryId int64     `bun:",notnull" json:"-"`
-	Category   *Category `bun:"rel:has-one,join:category_id=id" json:"category,omitempty"`
-	UserId     *int64    `json:"-"`
-	User       *User     `bun:"rel:has-one,join:user_id=id" json:"user,omitempty"`
-}
+		Id         int64     `bun:",pk,autoincrement"`
+		Name       string    `bun:",unique:products_unique,notnull"`
+		CategoryId int64     `bun:",notnull"`
+		Category   *Category `bun:"rel:has-one,join:category_id=id"`
+		UserId     *int64    `bun:",unique:products_unique"`
+		User       *User     `bun:"rel:has-one,join:user_id=id"`
+		IsCustom   bool      `bun:",notnull,default:false"`
+	}
 
-func (item *Item) String() string {
-	return fmt.Sprintf("Id: %d, Name: %s, Category: %s, User: %s", item.Id, item.Name, item.Category.String(), item.User.String())
-}
+	List struct {
+		bun.BaseModel `bun:"table:lists,alias:l"`
 
-type User struct {
-	bun.BaseModel `bun:"table:users,alias:u"`
+		Id        int64       `bun:",pk,autoincrement"`
+		Name      string      `bun:",notnull"`
+		UserId    int64       `bun:",notnull"`
+		User      *User       `bun:"rel:has-one,join:user_id=id"`
+		ListItems []*ListItem `bun:"rel:has-many,join:id=list_id"`
+	}
 
-	Id    int64  `bun:",pk,autoincrement" json:"id"`
-	Email string `bun:",unique,notnull" json:"email"`
-}
+	ListItem struct {
+		bun.BaseModel `bun:"table:list_items,alias:li"`
 
-func (user *User) String() string {
-	return fmt.Sprintf("Id: %d, Email: %s", user.Id, user.Email)
-}
+		Id        int64    `bun:",pk,autoincrement"`
+		Unit      *string  ``
+		Amount    float32    `bun:",notnull,default:1.0"`
+		ListId    int64    `bun:",notnull"`
+		List      *List    `bun:"rel:has-one,join:list_id=id"`
+		ProductId int64    `bun:",notnull"`
+		Product   *Product `bun:"rel:has-one,join:product_id=id"`
+	}
 
-type Category struct {
-	bun.BaseModel `bun:"table:categories,alias:c"`
+	User struct {
+		bun.BaseModel `bun:"table:users,alias:u"`
 
-	Id   int64  `bun:",pk,autoincrement" json:"id"`
-	Name string `bun:",unique,notnull" json:"name"`
-}
+		Id    int64  `bun:",pk,autoincrement"`
+		Email string `bun:",unique,notnull"`
+	}
 
-func (category *Category) String() string {
-	return fmt.Sprintf("Id: %d, Name: %s", category.Id, category.Name)
-}
+	Category struct {
+		bun.BaseModel `bun:"table:categories,alias:c"`
+
+		Id       int64           `bun:",pk,autoincrement"`
+		Name     string          `bun:",unique:user_category-unique,notnull"`
+		UserId   *int64          `bun:",unique:user_category_unique"`
+		User     *User           `bun:"rel:has-one,join:user_id=id"`
+		IsCustom bool            `bun:",notnull,default:false"`
+    Orders   []CategoryOrder `bun:"rel:has-many,join:id=category_id,join:user_id=user_id"`
+	}
+
+	CategoryOrder struct {
+		bun.BaseModel `bun:"table:category_orders,alias:co"`
+
+		CategoryId int64     `bun:",pk"`
+		Category   *Category `bun:"rel:has-one,join:category_id=id"`
+		UserId     int64     `bun:",pk"`
+		User       *User     `bun:"rel:has-one,join:user_id=id"`
+		Order      int16     `bun:",notnull"`
+	}
+)

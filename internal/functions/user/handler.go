@@ -37,5 +37,5 @@ func (h handler) Get(ctx *fiber.Ctx) error {
     return err
   }
 
-  return functions.ToHandler(partials.User(user))(ctx)
+  return functions.ToHandler(partials.User(*user))(ctx)
 }

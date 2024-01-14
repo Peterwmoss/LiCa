@@ -12,8 +12,14 @@ type (
 		Get() *oauth2.Config
 	}
 
-	authConfig struct {}
+	authConfig struct {
+    baseUrl string
+  }
 )
+
+func NewAuthConfig(baseUrl string) AuthConfig {
+  return &authConfig{ baseUrl }
+}
 
 func (ac authConfig) Get() *oauth2.Config {
 	clientId := os.Getenv("GOOGLE_CLIENT_ID")
@@ -29,7 +35,7 @@ func (ac authConfig) Get() *oauth2.Config {
 	log.Debug().Msgf("Host: %s", host)
 
 	return &oauth2.Config{
-		RedirectURL:  host + BASE_URL + "/callback",
+		RedirectURL:  host + ac.baseUrl + "/callback",
 		ClientID:     clientId,
 		ClientSecret: clientSecret,
 		Scopes:       []string{"openid", "https://www.googleapis.com/auth/userinfo.email"},

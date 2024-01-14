@@ -9,5 +9,6 @@ import (
 templ HomePage(user domain.User) {
 	@shared.Page("Home") {
     @partials.User(user)
+    <div hx-get="lists" hx-trigger="load"></div>
 	}
 }
