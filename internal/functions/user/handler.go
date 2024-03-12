@@ -1,41 +1,44 @@
 package user
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/Peterwmoss/LiCa/internal/functions"
 	"github.com/Peterwmoss/LiCa/internal/templates/partials"
-	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
-type (
-  Handler interface {
-    Mount(*fiber.App)
-    Get(*fiber.Ctx) error
-  }
+func NewHandler(userService domain.UserService) http.Handler {
+	server := http.NewServeMux()
 
-  handler struct { 
-    userService domain.UserService
-  }
-)
+	server.HandleFunc("GET /", get(userService))
 
-func NewHandler() Handler {
-  return &handler{}
+	return server
 }
 
-func (h handler) Mount(app *fiber.App) {
-  app.Get("/user", h.Get)
-}
+func get(userService domain.UserService) func(http.ResponseWriter, *http.Request) {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		if !functions.IsHTMXRequest(request) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
 
-func (h handler) Get(ctx *fiber.Ctx) error {
-  if !functions.IsHTMXRequest(ctx) {
-    return ctx.SendStatus(fiber.StatusNotFound)
-  }
+		token, err := functions.GetToken(request)
+		if err != nil {
+			log.Info().Err(err).Msg("Failed to get token")
+			functions.RedirectToLogin(writer, request)
+			return
+		}
 
-  token := string(ctx.Request().Header.Cookie("token"))
-  user, err := h.userService.Get(token)
-  if err != nil {
-    return err
-  }
+		user, err := userService.Get(token)
+		if err != nil {
+			log.Info().Err(err).Msg("Failed to get user")
+			functions.RedirectToLogin(writer, request)
+			return
+		}
 
-  return functions.ToHandler(partials.User(*user))(ctx)
+		partials.User(*user).Render(context.Background(), writer)
+	}
 }

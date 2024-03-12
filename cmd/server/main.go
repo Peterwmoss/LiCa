@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -45,7 +46,10 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to seed data")
 	}
 
-	app.Static("/public", "./internal/assets/public")
+  server := http.NewServeMux()
+
+  fileServer := http.FileServer(http.Dir("./internal/assets/public"))
+  server.Handle("/public", fileServer)
 
 	userService := domain.NewUserService(db, ctx)
 	categoryService := domain.NewCategoryService(db, ctx)
@@ -54,15 +58,18 @@ func main() {
 	listService := domain.NewListService(db, ctx, listItemService)
 
 	homeHandler := home.NewHandler(userService)
-	homeHandler.Mount(app)
+  server.Handle("/", homeHandler)
 
 	listHandler := list.NewHandler(listService, userService)
+  server.Handle("/lists", listHandler)
 	listHandler.Mount(app)
 
 	authHandler := auth.NewHandler(userService, ctx)
+  server.Handle("/auth", authHandler)
 	authHandler.Mount(app)
 
 	userHandler := user.NewHandler()
+  server.Handle("/user", userHandler)
 	userHandler.Mount(app)
 
 	if err := app.Listen(":3000"); err != nil {
