@@ -6,7 +6,7 @@ $(foreach bin,$(REQUIRED_BINS),\
 all: run
 
 get:
-	go get ./cmd/server
+	go get ./cmd
 
 run: get postgres-start
 	air

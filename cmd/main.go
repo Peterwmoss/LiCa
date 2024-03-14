@@ -10,11 +10,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
-	"github.com/Peterwmoss/LiCa/internal/auth"
+	// "github.com/Peterwmoss/LiCa/internal/auth"
 	"github.com/Peterwmoss/LiCa/internal/database"
-	"github.com/Peterwmoss/LiCa/internal/domain"
-	"github.com/Peterwmoss/LiCa/internal/functions"
-	"github.com/Peterwmoss/LiCa/internal/middleware"
+	// "github.com/Peterwmoss/LiCa/internal/domain"
+	// "github.com/Peterwmoss/LiCa/internal/functions"
+	// "github.com/Peterwmoss/LiCa/internal/middleware"
+	"github.com/Peterwmoss/LiCa/internal/templates"
 )
 
 func init() {
@@ -28,6 +29,10 @@ func init() {
 	if err != nil {
 		log.Fatal().Msgf("Failed to load .env: %s", err)
 	}
+}
+
+type Count struct {
+  Count int
 }
 
 func main() {
@@ -45,35 +50,48 @@ func main() {
 
 	server := http.NewServeMux()
 
-	userService := domain.NewUserService(db, ctx)
-	categoryService := domain.NewCategoryService(db, ctx)
-	productService := domain.NewProductService(db, ctx, categoryService)
-	listItemService := domain.NewListItemService(productService)
-	listService := domain.NewListService(db, ctx, listItemService)
+  templates := templates.NewTemplates()
 
-	fileServer := http.FileServer(http.Dir("./internal/assets/public"))
-	server.Handle("/", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-    middleware.NewAuth(userService)(writer, request)
+  count := Count{}
 
-    fileServer.ServeHTTP(writer, request)
-  }))
+  server.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+    templates.Render(w, "index", count)
+  })
 
-	homeHandler := functions.NewHomeHandler(userService)
-	server.HandleFunc("GET /home", homeHandler.Get)
+  server.HandleFunc("POST /count", func(w http.ResponseWriter, r *http.Request) {
+    count.Count++
+    templates.Render(w, "count", count)
+  })
 
-	listHandler := functions.NewListHandler(listService, userService)
-	server.HandleFunc("GET /lists", listHandler.GetAll)
-	server.HandleFunc("POST /lists", listHandler.Create)
-
-	authConfig := auth.NewAuthConfig("/auth")
-	authHandler := functions.NewAuthHandler(userService, authConfig.BaseUrl)
-
-	server.HandleFunc("GET /auth/login", authHandler.Login)
-	server.HandleFunc("GET /auth/logout", authHandler.Logout)
-	server.HandleFunc("GET /auth/callback", authHandler.Callback)
-
-	userHandler := functions.NewUserHandler(userService)
-	server.HandleFunc("GET /users", userHandler.Get)
+	// userService := domain.NewUserService(db, ctx)
+	// categoryService := domain.NewCategoryService(db, ctx)
+	// productService := domain.NewProductService(db, ctx, categoryService)
+	// listItemService := domain.NewListItemService(productService)
+	// listService := domain.NewListService(db, ctx, listItemService)
+	//
+	// fileServer := http.FileServer(http.Dir("./internal/assets/public"))
+	// server.Handle("/", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+ //    middleware.NewAuth(userService)(writer, request)
+	//
+ //    fileServer.ServeHTTP(writer, request)
+ //  }))
+	//
+	// homeHandler := functions.NewHomeHandler(userService)
+	// server.HandleFunc("GET /home", homeHandler.Get)
+	//
+	// listHandler := functions.NewListHandler(listService, userService)
+	// server.HandleFunc("GET /lists", listHandler.GetAll)
+	// server.HandleFunc("POST /lists", listHandler.Create)
+	//
+	// authConfig := auth.NewAuthConfig("/auth")
+	// authHandler := functions.NewAuthHandler(userService, authConfig.BaseUrl)
+	//
+	// server.HandleFunc("GET /auth/login", authHandler.Login)
+	// server.HandleFunc("GET /auth/logout", authHandler.Logout)
+	// server.HandleFunc("GET /auth/callback", authHandler.Callback)
+	//
+	// userHandler := functions.NewUserHandler(userService)
+	// server.HandleFunc("GET /users", userHandler.Get)
 
 	if err := http.ListenAndServe(":3000", server); err != nil {
 		log.Fatal().Msg("Failed to start api")

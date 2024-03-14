@@ -1,19 +1,63 @@
-	<!DOCTYPE html>
-	<html lang="en" class="h-full">
-	<head>
-		<meta charset="UTF-8"/>
-		<title>LiCa</title>
-		<link rel="icon" type="image/svg+xml" href="/dist/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1"/>
-		<meta name="robots" content="index, follow"/>
-		<meta name="revisit-after" content="7 days"/>
-		<meta name="language" content="English"/>
-    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="/reset.css"/>
-    <link rel="stylesheet" href="/styles.css"/>
-	</head>
-	<body>
-    Count: {{ .Count }}
-    <!-- <div hx-get="/home" hx-trigger="load" hx-swap="outerHTML"> -->
-	</body>
-	</html>
+{{ block "index" . }}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8"/>
+  <title>LiCa</title>
+  <link rel="icon" type="image/svg+xml" href="/dist/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="revisit-after" content="7 days"/>
+  <meta name="language" content="English"/>
+  <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/reset.css"/>
+  <link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+  {{ template "home" . }}
+</body>
+</html>
+{{ end }}
+
+{{ block "home" . }}
+  {{ template "lists" .Lists }}
+{{ end }}
+
+{{ block "lists" . }}
+<script>
+  addOnClickOutsideListener("#newListModal", () => {
+    hide("newListModal");
+  });
+</script>
+
+<div id="lists">
+  <p>Dine indkøbslister</p>
+  <button hx-on:click="show('newListModal')">Ny liste</button>
+  {{ range . }}
+    <p>{{ .Name }}</p>
+    {{ range .Items }}
+      <p>{{ .Product.Name }}</p>
+    {{ end }}
+  {{ end }}
+
+  <div id="newListModal">
+    <h2>Opret ny liste</h2>
+    <form>
+      <input name="name" type="text" placeholder="Angiv navn"/>
+      <button 
+        type="submit" 
+        hx-post="/lists" 
+        hx-target="#lists" 
+        hx-on:click="hide('newListModal')">
+        Opret
+      </button>
+    </form>
+  </div>
+</div>
+{{ end }}
+
+{{ block "card" . }}
+<div>
+  {{ .Title }}
+</div>
+{{ end }}
