@@ -9,7 +9,7 @@ import (
 
 type (
 	Product struct {
-		id       int64
+		id       int
 		Name     string
 		Category Category
 		IsCustom bool

@@ -10,12 +10,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
-	// "github.com/Peterwmoss/LiCa/internal/auth"
+	"github.com/Peterwmoss/LiCa/internal/auth"
 	"github.com/Peterwmoss/LiCa/internal/database"
-	// "github.com/Peterwmoss/LiCa/internal/domain"
-	// "github.com/Peterwmoss/LiCa/internal/functions"
-	// "github.com/Peterwmoss/LiCa/internal/middleware"
-	"github.com/Peterwmoss/LiCa/internal/templates"
+	"github.com/Peterwmoss/LiCa/internal/domain"
+	"github.com/Peterwmoss/LiCa/internal/middleware"
+	"github.com/Peterwmoss/LiCa/internal/views"
+
+	"github.com/Peterwmoss/LiCa/internal/functions"
 )
 
 func init() {
@@ -29,10 +30,6 @@ func init() {
 	if err != nil {
 		log.Fatal().Msgf("Failed to load .env: %s", err)
 	}
-}
-
-type Count struct {
-  Count int
 }
 
 func main() {
@@ -50,48 +47,33 @@ func main() {
 
 	server := http.NewServeMux()
 
-  templates := templates.NewTemplates()
+	templates := views.NewTemplates()
 
-  count := Count{}
+	userService := domain.NewUserService(db, ctx)
+	categoryService := domain.NewCategoryService(db, ctx)
+	productService := domain.NewProductService(db, ctx, categoryService)
+	listItemService := domain.NewListItemService(productService)
+	listService := domain.NewListService(db, ctx, listItemService)
 
-  server.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-    templates.Render(w, "index", count)
-  })
+	fileServer := http.FileServer(http.Dir("./internal/assets"))
+	server.Handle("GET /public/", fileServer)
 
-  server.HandleFunc("POST /count", func(w http.ResponseWriter, r *http.Request) {
-    count.Count++
-    templates.Render(w, "count", count)
-  })
+	server.Handle("GET /", middleware.UseAuth(userService, functions.GetIndex(templates)))
 
-	// userService := domain.NewUserService(db, ctx)
-	// categoryService := domain.NewCategoryService(db, ctx)
-	// productService := domain.NewProductService(db, ctx, categoryService)
-	// listItemService := domain.NewListItemService(productService)
-	// listService := domain.NewListService(db, ctx, listItemService)
-	//
-	// fileServer := http.FileServer(http.Dir("./internal/assets/public"))
-	// server.Handle("/", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
- //    middleware.NewAuth(userService)(writer, request)
-	//
- //    fileServer.ServeHTTP(writer, request)
- //  }))
-	//
-	// homeHandler := functions.NewHomeHandler(userService)
-	// server.HandleFunc("GET /home", homeHandler.Get)
-	//
-	// listHandler := functions.NewListHandler(listService, userService)
-	// server.HandleFunc("GET /lists", listHandler.GetAll)
-	// server.HandleFunc("POST /lists", listHandler.Create)
-	//
-	// authConfig := auth.NewAuthConfig("/auth")
-	// authHandler := functions.NewAuthHandler(userService, authConfig.BaseUrl)
-	//
-	// server.HandleFunc("GET /auth/login", authHandler.Login)
-	// server.HandleFunc("GET /auth/logout", authHandler.Logout)
-	// server.HandleFunc("GET /auth/callback", authHandler.Callback)
-	//
-	// userHandler := functions.NewUserHandler(userService)
-	// server.HandleFunc("GET /users", userHandler.Get)
+	listHandler := functions.NewListHandler(listService, templates)
+	server.Handle("GET /lists", middleware.UseAuth(userService, listHandler.GetAll))
+  server.Handle("GET /lists/{id}", middleware.UseAuth(userService, listHandler.Get))
+	server.Handle("POST /lists", middleware.UseAuth(userService, listHandler.Create))
+
+	userHandler := functions.NewUserHandler(userService, templates)
+	server.Handle("GET /users", userHandler.Get)
+
+	authConfig := auth.NewAuthConfig("/auth")
+	authHandler := functions.NewAuthHandler(userService, authConfig.BaseUrl)
+
+	server.Handle("GET /auth/login", authHandler.Login)
+	server.Handle("GET /auth/logout", authHandler.Logout)
+	server.Handle("GET /auth/callback", authHandler.Callback)
 
 	if err := http.ListenAndServe(":3000", server); err != nil {
 		log.Fatal().Msg("Failed to start api")

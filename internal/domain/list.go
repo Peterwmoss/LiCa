@@ -11,14 +11,15 @@ import (
 
 type (
 	List struct {
-		id    int64
+		id    int
 		Name  string
 		Items []ListItem
 	}
 
 	ListService interface {
 		GetAll(User) ([]List, error)
-		Create(name string, user User) ([]List, error)
+		Get(User, int) (*List, error)
+		Create(name string, user User) (*List, error)
 		ToDomain(database.List) List
 	}
 
@@ -43,10 +44,6 @@ func (svc listService) GetAll(user User) ([]List, error) {
 	err := svc.db.NewSelect().
 		Model(&dbLists).
 		Where("user_id = ?", user.id).
-		Relation("ListItems").
-		Relation("ListItems.Product").
-		Relation("ListItems.Product.Category").
-		Relation("ListItems.Product.Category.Orders").
 		Scan(svc.ctx)
 	if err != nil {
 		return nil, err
@@ -62,7 +59,31 @@ func (svc listService) GetAll(user User) ([]List, error) {
 	return lists, nil
 }
 
-func (svc listService) Create(name string, user User) ([]List, error) {
+func (svc listService) Get(user User, id int) (*List, error) {
+	dbList := database.List{}
+
+	err := svc.db.NewSelect().
+		Model(&dbList).
+		Where("id = ?", id).
+		Where("user_id = ?", user.id).
+		Relation("ListItems").
+		Relation("ListItems.Product").
+		Relation("ListItems.Product.Category").
+		Relation("ListItems.Product.Category.Orders").
+		Limit(1).
+		Scan(svc.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	list := svc.ToDomain(dbList)
+
+	log.Info().Msgf("Found list: %v", list)
+
+	return &list, nil
+}
+
+func (svc listService) Create(name string, user User) (*List, error) {
 	list := database.List{
 		Name:   name,
 		UserId: user.id,
@@ -75,7 +96,7 @@ func (svc listService) Create(name string, user User) ([]List, error) {
 		return nil, err
 	}
 
-	return svc.GetAll(user)
+	return svc.Get(user, list.Id)
 }
 
 func (svc listService) ToDomain(list database.List) List {

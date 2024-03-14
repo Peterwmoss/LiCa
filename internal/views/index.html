@@ -10,54 +10,11 @@
   <meta name="revisit-after" content="7 days"/>
   <meta name="language" content="English"/>
   <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-  <link rel="stylesheet" href="/reset.css"/>
-  <link rel="stylesheet" href="/styles.css"/>
+  <link rel="stylesheet" href="/public/reset.css"/>
+  <link rel="stylesheet" href="/public/styles.css"/>
 </head>
-<body>
-  {{ template "home" . }}
-</body>
+  <body>
+    {{ template "home" . }}
+  </body>
 </html>
-{{ end }}
-
-{{ block "home" . }}
-  {{ template "lists" .Lists }}
-{{ end }}
-
-{{ block "lists" . }}
-<script>
-  addOnClickOutsideListener("#newListModal", () => {
-    hide("newListModal");
-  });
-</script>
-
-<div id="lists">
-  <p>Dine indkøbslister</p>
-  <button hx-on:click="show('newListModal')">Ny liste</button>
-  {{ range . }}
-    <p>{{ .Name }}</p>
-    {{ range .Items }}
-      <p>{{ .Product.Name }}</p>
-    {{ end }}
-  {{ end }}
-
-  <div id="newListModal">
-    <h2>Opret ny liste</h2>
-    <form>
-      <input name="name" type="text" placeholder="Angiv navn"/>
-      <button 
-        type="submit" 
-        hx-post="/lists" 
-        hx-target="#lists" 
-        hx-on:click="hide('newListModal')">
-        Opret
-      </button>
-    </form>
-  </div>
-</div>
-{{ end }}
-
-{{ block "card" . }}
-<div>
-  {{ .Title }}
-</div>
 {{ end }}

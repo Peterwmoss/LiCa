@@ -14,29 +14,32 @@ type (
 	}
 )
 
-func NewAuth(userService domain.UserService) http.HandlerFunc {
-	return func(writer http.ResponseWriter, request *http.Request) {
+func UseAuth(userService domain.UserService, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		tokenCookie, err := request.Cookie("token")
 		if err != nil {
-      redirectToLogin(writer, request)
+			redirectToLogin(writer, request)
 			return
 		}
 
 		token := tokenCookie.Value
 		if token == "" {
-      redirectToLogin(writer, request)
+			redirectToLogin(writer, request)
 			return
 		}
 
-		user, err := userService.Get(token)
+		user, err := userService.GetOrCreate(token)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to get user from token")
-      redirectToLogin(writer, request)
+			redirectToLogin(writer, request)
 			return
 		}
 
-		request.WithContext(context.WithValue(request.Context(), "user", user))
-	}
+    log.Info().Msgf("Email: %s", user.Email)
+		request = request.WithContext(context.WithValue(request.Context(), "user", *user))
+
+		next.ServeHTTP(writer, request)
+	})
 }
 
 func redirectToLogin(writer http.ResponseWriter, request *http.Request) {

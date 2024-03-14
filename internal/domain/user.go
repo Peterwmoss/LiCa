@@ -12,7 +12,7 @@ import (
 
 type (
 	User struct {
-		id    int64
+		id    int
 		Email string
 	}
 
@@ -37,6 +37,8 @@ func (svc userService) Get(token string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+
+  log.Info().Msgf("Userinfo: %v", userInfo)
 
 	user, err := svc.getIfExists(userInfo.Email)
 	if err != nil {
@@ -70,7 +72,7 @@ func (svc userService) GetOrCreate(token string) (*User, error) {
 	}
 
 	if err := svc.Create(userInfo.Email); err != nil {
-		log.Error().Err(err).Msgf("Failed to create user", user.Email)
+    log.Error().Err(err).Msgf("Failed to create user with email: %s", userInfo.Email)
 		return nil, err
 	}
 
@@ -87,7 +89,7 @@ func (svc userService) Create(email string) error {
 		Model(&database.User{Email: email}).
 		Exec(svc.ctx)
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to create user with email:", email)
+		log.Error().Err(err).Msgf("Failed to create user with email: %s", email)
 		return err
 	}
 

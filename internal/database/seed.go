@@ -202,7 +202,7 @@ func findCategoryByName(name string, db *bun.DB, ctx context.Context) *Category 
 		log.Fatal(err)
 	}
 
-	if category == nil {
+  if category.Id == 0 {
 		log.Fatal("Could not find category with name. Failed to seed")
 	}
 

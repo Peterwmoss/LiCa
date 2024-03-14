@@ -4,7 +4,7 @@ import "github.com/Peterwmoss/LiCa/internal/database"
 
 type (
 	ListItem struct {
-		id      int64
+		id      int
 		Product Product
 		Amount  float32
 		Unit    Unit

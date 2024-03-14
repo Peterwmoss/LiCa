@@ -9,9 +9,9 @@ import (
 
 type (
 	Category struct {
-		id       int64
+		id       int
 		Name     string
-		Order    int16
+		Order    int
 		IsCustom bool
 	}
 
@@ -52,7 +52,7 @@ func (service categoryService) GetAll(user User) ([]Category, error) {
 }
 
 func (categoryService) ToDomain(category database.Category) Category {
-	order := int16(0)
+	order := 0
 	if len(category.Orders) > 0 {
 		order = category.Orders[0].Order
 	}
