@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./bin/LiCa"
-  cmd = "make generate && go build -o ./bin/LiCa ./cmd/server"
+  cmd = "go build -o ./bin/LiCa ./cmd/server"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

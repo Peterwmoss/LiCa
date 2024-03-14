@@ -39,5 +39,6 @@ function toggle(id) {
   * @param {string} id 
   */
 function isOpen(id) {
-  return document.getElementById(id).hidden
+  const elm = document.getElementById(id)
+  return !elm.hidden && elm.style.display !== "none"
 }

@@ -11,9 +11,6 @@ get:
 run: get postgres-start
 	air
 
-generate:
-	templ generate
-
 postgres-start:
 	@printf "Creating postgres container, or reusing existing\n"
 	@(docker run -itd --name lica-postgres -p 5433:5432 -e POSTGRES_PASSWORD=postgres postgres &> /dev/null && sleep 1) || (docker start lica-postgres && sleep 1)

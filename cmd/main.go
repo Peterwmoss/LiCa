@@ -10,13 +10,11 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
+	"github.com/Peterwmoss/LiCa/internal/auth"
 	"github.com/Peterwmoss/LiCa/internal/database"
 	"github.com/Peterwmoss/LiCa/internal/domain"
-	"github.com/Peterwmoss/LiCa/internal/functions/auth"
-	"github.com/Peterwmoss/LiCa/internal/functions/home"
-	"github.com/Peterwmoss/LiCa/internal/functions/list"
-	"github.com/Peterwmoss/LiCa/internal/functions/user"
-	"github.com/gofiber/fiber/v2"
+	"github.com/Peterwmoss/LiCa/internal/functions"
+	"github.com/Peterwmoss/LiCa/internal/middleware"
 )
 
 func init() {
@@ -34,7 +32,6 @@ func init() {
 
 func main() {
 	ctx := context.Background()
-	app := fiber.New()
 	db := database.Get()
 	defer db.Close()
 
@@ -46,10 +43,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to seed data")
 	}
 
-  server := http.NewServeMux()
-
-  fileServer := http.FileServer(http.Dir("./internal/assets/public"))
-  server.Handle("/public", fileServer)
+	server := http.NewServeMux()
 
 	userService := domain.NewUserService(db, ctx)
 	categoryService := domain.NewCategoryService(db, ctx)
@@ -57,22 +51,31 @@ func main() {
 	listItemService := domain.NewListItemService(productService)
 	listService := domain.NewListService(db, ctx, listItemService)
 
-	homeHandler := home.NewHandler(userService)
-  server.Handle("/", homeHandler)
+	fileServer := http.FileServer(http.Dir("./internal/assets/public"))
+	server.Handle("/", http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+    middleware.NewAuth(userService)(writer, request)
 
-	listHandler := list.NewHandler(listService, userService)
-  server.Handle("/lists", listHandler)
-	listHandler.Mount(app)
+    fileServer.ServeHTTP(writer, request)
+  }))
 
-	authHandler := auth.NewHandler(userService, ctx)
-  server.Handle("/auth", authHandler)
-	authHandler.Mount(app)
+	homeHandler := functions.NewHomeHandler(userService)
+	server.HandleFunc("GET /home", homeHandler.Get)
 
-	userHandler := user.NewHandler()
-  server.Handle("/user", userHandler)
-	userHandler.Mount(app)
+	listHandler := functions.NewListHandler(listService, userService)
+	server.HandleFunc("GET /lists", listHandler.GetAll)
+	server.HandleFunc("POST /lists", listHandler.Create)
 
-	if err := app.Listen(":3000"); err != nil {
+	authConfig := auth.NewAuthConfig("/auth")
+	authHandler := functions.NewAuthHandler(userService, authConfig.BaseUrl)
+
+	server.HandleFunc("GET /auth/login", authHandler.Login)
+	server.HandleFunc("GET /auth/logout", authHandler.Logout)
+	server.HandleFunc("GET /auth/callback", authHandler.Callback)
+
+	userHandler := functions.NewUserHandler(userService)
+	server.HandleFunc("GET /users", userHandler.Get)
+
+	if err := http.ListenAndServe(":3000", server); err != nil {
 		log.Fatal().Msg("Failed to start api")
 	}
 }

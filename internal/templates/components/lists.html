@@ -1,0 +1,30 @@
+<script>
+  addOnClickOutsideListener("#newListModal", () => {
+    hide("newListModal");
+  });
+</script>
+
+<div id="lists">
+  <p>Dine indkøbslister</p>
+  <button hx-on:click="show('newListModal')">Ny liste</button>
+  {{ range .Lists }}
+    <p>{{ .Name }}</p>
+    {{ range .Items }}
+      <p>{{ .Product.Name }}</p>
+    {{ end }}
+  {{ end }}
+
+  <div id="newListModal">
+    <h2>Opret ny liste</h2>
+    <form>
+      <input name="name" type="text" placeholder="Angiv navn"/>
+      <button 
+        type="submit" 
+        hx-post="/lists" 
+        hx-target="#lists" 
+        hx-on:click="hide('newListModal')">
+        Opret
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,38 +1,48 @@
 package middleware
 
 import (
+	"context"
+	"net/http"
+
 	"github.com/Peterwmoss/LiCa/internal/domain"
-	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
 )
 
 type (
-	Auth interface {
-		Known(*fiber.Ctx) error
-	}
-
 	auth struct {
 		userService domain.UserService
 	}
 )
 
-func NewAuth(userService domain.UserService) Auth {
-	return &auth{userService}
+func NewAuth(userService domain.UserService) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		tokenCookie, err := request.Cookie("token")
+		if err != nil {
+      redirectToLogin(writer, request)
+			return
+		}
+
+		token := tokenCookie.Value
+		if token == "" {
+      redirectToLogin(writer, request)
+			return
+		}
+
+		user, err := userService.Get(token)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to get user from token")
+      redirectToLogin(writer, request)
+			return
+		}
+
+		request.WithContext(context.WithValue(request.Context(), "user", user))
+	}
 }
 
-func (a auth) Known(ctx *fiber.Ctx) error {
-	token := string(ctx.Request().Header.Cookie("token"))
-	if token == "" {
-		return ctx.SendStatus(fiber.StatusUnauthorized)
-	}
+func redirectToLogin(writer http.ResponseWriter, request *http.Request) {
+	redirectUrl := "/auth/login"
 
-	user, err := a.userService.Get(token)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to get user from token")
-		ctx.SendStatus(fiber.StatusUnauthorized)
-	}
+	log.Info().Msg("Redirecting to login")
 
-	ctx.Locals("user", user)
-
-	return ctx.Next()
+	http.Redirect(writer, request, redirectUrl, http.StatusTemporaryRedirect)
 }
