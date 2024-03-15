@@ -73,7 +73,7 @@ func main() {
 	staticHandler := http.FileServer(http.Dir("./internal/assets"))
 
 	authConfig := auth.NewOauth2Config(AUTH_BASE_URL)
-	authMiddleware := middleware.AuthMiddleware(userService, AUTH_BASE_URL)
+	authMiddleware := middleware.AuthMiddleware(userService, AUTH_BASE_URL+"/login")
 
 	server := http.NewServeMux()
 

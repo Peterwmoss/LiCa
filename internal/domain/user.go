@@ -32,7 +32,7 @@ func NewUserService(db *bun.DB, ctx context.Context) UserService {
 	return &userService{db, ctx}
 }
 
-func (svc userService) Get(token string) (*User, error) {
+func (svc *userService) Get(token string) (*User, error) {
 	userInfo, err := auth.GetUserInfo(token)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (svc userService) Get(token string) (*User, error) {
 	return user, nil
 }
 
-func (svc userService) GetOrCreate(token string) (*User, error) {
+func (svc *userService) GetOrCreate(token string) (*User, error) {
 	userInfo, err := auth.GetUserInfo(token)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (svc userService) GetOrCreate(token string) (*User, error) {
 	return user, nil
 }
 
-func (svc userService) Create(email string) error {
+func (svc *userService) Create(email string) error {
 	_, err := svc.db.NewInsert().
 		Model(&database.User{Email: email}).
 		Exec(svc.ctx)
@@ -96,7 +96,7 @@ func (svc userService) Create(email string) error {
 	return nil
 }
 
-func (svc userService) getIfExists(email string) (*User, error) {
+func (svc *userService) getIfExists(email string) (*User, error) {
 	exists, err := svc.emailExists(email)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func (svc userService) getIfExists(email string) (*User, error) {
 	return svc.get(email)
 }
 
-func (svc userService) get(email string) (*User, error) {
+func (svc *userService) get(email string) (*User, error) {
 	dbUser := database.User{
 		Email: email,
 	}
@@ -128,7 +128,7 @@ func (svc userService) get(email string) (*User, error) {
 	}, nil
 }
 
-func (svc userService) emailExists(email string) (bool, error) {
+func (svc *userService) emailExists(email string) (bool, error) {
 	user := database.User{
 		Email: email,
 	}

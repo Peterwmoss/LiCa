@@ -39,7 +39,7 @@ func AuthMiddleware(userService domain.UserService, loginUrl string) func(next h
 			user, err := userService.GetOrCreate(token)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to get user from token")
-				writer.WriteHeader(http.StatusInternalServerError)
+				redirectToLogin(writer, request)
 				return
 			}
 
