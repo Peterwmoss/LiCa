@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/Peterwmoss/LiCa/internal/domain"
-	"github.com/Peterwmoss/LiCa/internal/functions"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,7 +21,7 @@ func ListGetAll(listService domain.ListService) http.Handler {
 			return
 		}
 
-		if functions.IsHTMXRequest(request) {
+		if isHTMXRequest(request) {
 			templates.Render(writer, "lists", lists)
 			return
 		}
@@ -39,7 +38,7 @@ func ListGet(listService domain.ListService) http.Handler {
 		id, err := strconv.Atoi(pathId)
 		if err != nil {
 			log.Error().Err(err).Msg("invalid id")
-      io.WriteString(writer, errors.New("invalid id").Error())
+			io.WriteString(writer, errors.New("invalid id").Error())
 			writer.WriteHeader(http.StatusUnprocessableEntity)
 			return
 		}
@@ -51,7 +50,7 @@ func ListGet(listService domain.ListService) http.Handler {
 			return
 		}
 
-		if functions.IsHTMXRequest(request) {
+		if isHTMXRequest(request) {
 			templates.Render(writer, "list", list)
 			return
 		}
@@ -72,7 +71,7 @@ func ListCreate(listService domain.ListService) http.Handler {
 			return
 		}
 
-		if functions.IsHTMXRequest(request) {
+		if isHTMXRequest(request) {
 			templates.Render(writer, "/components/lists", lists)
 			return
 		}
