@@ -1,6 +1,7 @@
 {{ block "listsWrapper" . }}
 <div>
   <p>Dine indkøbslister</p>
+  <button hx-get="/lists/new">+</button>
   <div id="lists" hx-trigger="load" hx-get="/lists" />
 </div>
 {{ end }}
