@@ -11,7 +11,6 @@ type Templates struct {
 
 func (t *Templates) Render(writer io.Writer, name string, data any) error {
   return t.Template.ExecuteTemplate(writer, name, data)
-
 }
 
 func NewTemplates() *Templates {
