@@ -1,25 +1,25 @@
 {{ block "listsWrapper" . }}
-<div>
-  <p>Dine indkøbslister</p>
-  <button hx-get="/lists/new">+</button>
-  <div id="lists" hx-trigger="load" hx-get="/lists" />
-</div>
+  <div>
+    <p>Dine indkøbslister</p>
+    <button hx-get="/lists/new">+</button>
+    <div id="lists" hx-trigger="load" hx-get="/lists" />
+  </div>
 {{ end }}
 
 {{ block "lists" . }}
-{{ range . }}
-  <div hx-get="/lists/{{ .Id }}">
-    <p>{{ .Name }}</p>
-  </div>
-{{ end }}
+  {{ range . }}
+    <div hx-get="/lists/{{ .Id }}" hx-target="main" hx-push-url="true">
+      <p>{{ .Name }}</p>
+    </div>
+  {{ end }}
 {{ end }}
 
 {{ block "list" . }}
-{{ .Name }}
-{{ range .Items }}
-  <div>
-    <p>{{ .Name }}</p>
-    <p>{{ .Category }}</p>
-  </div>
-{{ end }}
+  {{ .Name }}
+  {{ range .Items }}
+    <div>
+      <p>{{ .Name }}</p>
+      <p>{{ .Category }}</p>
+    </div>
+  {{ end }}
 {{ end }}

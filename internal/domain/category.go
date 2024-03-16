@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Peterwmoss/LiCa/internal/database"
 	"github.com/uptrace/bun"
@@ -40,7 +41,7 @@ func (service categoryService) GetAll(user User) ([]Category, error) {
 		Relation("Orders").
 		Scan(service.ctx)
 	if err != nil {
-		return nil, err
+    return nil, fmt.Errorf("GetAll: failed to get categories for user: %d: %w", user.id, err)
 	}
 
 	categories := make([]Category, len(arr))

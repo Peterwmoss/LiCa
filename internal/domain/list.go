@@ -11,7 +11,7 @@ import (
 
 type (
 	List struct {
-		id    int
+		Id    int
 		Name  string
 		Items []ListItem
 	}
@@ -106,7 +106,7 @@ func (svc listService) ToDomain(list database.List) List {
 	}
 
 	return List{
-		id:    list.Id,
+		Id:    list.Id,
 		Name:  list.Name,
 		Items: listItems,
 	}

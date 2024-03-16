@@ -12,6 +12,11 @@ import (
 
 func ListGetAll(listService domain.ListService) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !isHTMXRequest(request) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		user := request.Context().Value("user").(domain.User)
 
 		lists, err := listService.GetAll(user)
@@ -21,17 +26,17 @@ func ListGetAll(listService domain.ListService) http.Handler {
 			return
 		}
 
-		if isHTMXRequest(request) {
-			templates.Render(writer, "lists", lists)
-			return
-		}
-
-		writer.WriteHeader(http.StatusNotFound)
+		templates.Render(writer, "lists", lists)
 	})
 }
 
 func ListGet(listService domain.ListService) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !isHTMXRequest(request) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		user := request.Context().Value("user").(domain.User)
 
 		pathId := request.PathValue("id")
@@ -50,17 +55,17 @@ func ListGet(listService domain.ListService) http.Handler {
 			return
 		}
 
-		if isHTMXRequest(request) {
-			templates.Render(writer, "list", list)
-			return
-		}
-
-		writer.WriteHeader(http.StatusNotFound)
+		templates.Render(writer, "list", list)
 	})
 }
 
 func ListCreate(listService domain.ListService) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if !isHTMXRequest(request) {
+			writer.WriteHeader(http.StatusNotFound)
+			return
+		}
+
 		user := request.Context().Value("user").(*domain.User)
 
 		name := request.FormValue("name")
@@ -71,11 +76,6 @@ func ListCreate(listService domain.ListService) http.Handler {
 			return
 		}
 
-		if isHTMXRequest(request) {
-			templates.Render(writer, "/components/lists", lists)
-			return
-		}
-
-		writer.WriteHeader(http.StatusNotFound)
+		templates.Render(writer, "/components/lists", lists)
 	})
 }

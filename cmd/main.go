@@ -17,8 +17,6 @@ import (
 	"github.com/Peterwmoss/LiCa/internal/handlers/middleware"
 )
 
-const AUTH_BASE_URL string = "/auth"
-const GET_AUTH string = "GET " + AUTH_BASE_URL + "/"
 
 var authStateCheck string
 
@@ -72,8 +70,11 @@ func main() {
 
 	staticHandler := http.FileServer(http.Dir("./internal/assets"))
 
-	authConfig := auth.NewOauth2Config(AUTH_BASE_URL)
-	authMiddleware := middleware.AuthMiddleware(userService, AUTH_BASE_URL+"/login")
+  const authBaseUrl = "/auth"
+  const authGetUrl = "GET " + authBaseUrl + "/"
+
+	authConfig := auth.NewOauth2Config(authBaseUrl)
+	authMiddleware := middleware.AuthMiddleware(userService, authBaseUrl+"/login")
 
 	server := http.NewServeMux()
 
@@ -85,9 +86,9 @@ func main() {
 	server.Handle("GET /lists/{id}", authMiddleware(handlers.ListGet(listService)))
 	server.Handle("POST /lists", authMiddleware(handlers.ListCreate(listService)))
 
-	server.Handle(GET_AUTH+"login", handlers.AuthLogin(authConfig, authStateCheck))
-	server.Handle(GET_AUTH+"logout", handlers.AuthLogout())
-	server.Handle(GET_AUTH+"callback", handlers.AuthCallback(authConfig, authStateCheck, userService))
+	server.Handle(authGetUrl+"login", handlers.AuthLogin(authConfig, authStateCheck))
+	server.Handle(authGetUrl+"logout", handlers.AuthLogout())
+	server.Handle(authGetUrl+"callback", handlers.AuthCallback(authConfig, authStateCheck, userService))
 
 	if err := http.ListenAndServe(":3000", server); err != nil {
 		log.Fatal().Msg("Failed to start api")

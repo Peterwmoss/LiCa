@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/uptrace/bun"
@@ -10,12 +11,12 @@ import (
 func Seed(db *bun.DB, ctx context.Context) error {
 	err := seedCategories(db, ctx)
 	if err != nil {
-		return err
+    return fmt.Errorf("Failed to seed categories: %w", err)
 	}
 
 	err = seedItems(db, ctx)
 	if err != nil {
-		return err
+    return fmt.Errorf("Failed to seed items: %w", err)
 	}
 
 	return nil
@@ -217,7 +218,7 @@ func insertNoDuplicates[T interface{}](db *bun.DB, models []T, ctx context.Conte
 			On("CONFLICT DO NOTHING").
 			Exec(ctx)
 		if err != nil {
-			return err
+      return fmt.Errorf("insertNoDuplicates: failed to insert model: %s: %w", model, err)
 		}
 	}
 
