@@ -87,6 +87,10 @@ func (svc listService) Get(user User, id int) (*List, error) {
 }
 
 func (svc listService) Create(name string, user User) (*List, error) {
+  if name == "" {
+    return nil, EmptyNameError
+  }
+
 	list := database.List{
 		Name:   name,
 		UserId: user.id,

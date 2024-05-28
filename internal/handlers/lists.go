@@ -77,7 +77,16 @@ func ListCreate(listService domain.ListService) http.Handler {
 			writer.WriteHeader(http.StatusConflict)
 			io.WriteString(writer, fmt.Sprintf("Liste med navn: \"%s\" eksisterer allerede", name))
 			return
-		} else if err != nil {
+		}
+
+		if errors.Is(err, domain.EmptyNameError) {
+			log.Debug().Msgf("user: \"%s\" tried to create list with empty name", user.Email)
+			writer.WriteHeader(http.StatusBadRequest)
+			io.WriteString(writer, "En liste skal have et navn")
+			return
+		}
+
+		if err != nil {
 			log.Error().Err(err).Msg("failed to create list for user")
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
