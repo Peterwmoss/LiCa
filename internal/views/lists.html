@@ -9,7 +9,7 @@
 {{ block "new_list" . }}
   <div>
     <input name="list-name" placeholder="Listenavn..."/>
-    <button hx-post="/lists" hx-include="[name='list-name']" hx-target="#lists" hx-swap="beforeend">Create</button>
+    <button hx-post="/lists" hx-include="[name='list-name']" hx-target="#lists" hx-swap="beforeend" hx-on:htmx:response-error="handleError(event)">Create</button>
   </div>
 {{ end }}
 

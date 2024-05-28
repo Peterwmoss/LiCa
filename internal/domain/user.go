@@ -2,9 +2,6 @@ package domain
 
 import (
 	"context"
-	"errors"
-
-	"github.com/Peterwmoss/LiCa/internal/auth"
 	"github.com/Peterwmoss/LiCa/internal/database"
 	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
@@ -17,8 +14,7 @@ type (
 	}
 
 	UserService interface {
-		GetOrCreate(token string) (*User, error)
-		Get(token string) (*User, error)
+		GetOrCreate(email string) (*User, error)
 		Create(email string) error
 	}
 
@@ -32,36 +28,8 @@ func NewUserService(db *bun.DB, ctx context.Context) UserService {
 	return &userService{db, ctx}
 }
 
-func (svc *userService) Get(token string) (*User, error) {
-	userInfo, err := auth.GetUserInfo(token)
-	if err != nil {
-		return nil, err
-	}
-
-  log.Info().Msgf("Userinfo: %v", userInfo)
-
-	user, err := svc.getIfExists(userInfo.Email)
-	if err != nil {
-		log.Error().Err(err).Msgf("Failed to check if email exists: %s", userInfo.Email)
-		return nil, err
-	}
-
-	if user == nil {
-		err = errors.New("user not found: " + userInfo.Email)
-		log.Error().Err(err).Send()
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func (svc *userService) GetOrCreate(token string) (*User, error) {
-	userInfo, err := auth.GetUserInfo(token)
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := svc.getIfExists(userInfo.Email)
+func (svc *userService) GetOrCreate(email string) (*User, error) {
+	user, err := svc.getIfExists(email)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get from database")
 		return nil, err
@@ -71,12 +39,12 @@ func (svc *userService) GetOrCreate(token string) (*User, error) {
 		return user, nil
 	}
 
-	if err := svc.Create(userInfo.Email); err != nil {
-    log.Error().Err(err).Msgf("Failed to create user with email: %s", userInfo.Email)
+	if err := svc.Create(email); err != nil {
+    log.Error().Err(err).Msgf("Failed to create user with email: %s", email)
 		return nil, err
 	}
 
-	user, err = svc.get(userInfo.Email)
+	user, err = svc.get(email)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get created user from database")
 		return nil, err

@@ -4,14 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Peterwmoss/LiCa/internal/auth"
 	"github.com/Peterwmoss/LiCa/internal/domain"
 	"github.com/rs/zerolog/log"
-)
-
-type (
-	auth struct {
-		userService domain.UserService
-	}
 )
 
 func AuthMiddleware(userService domain.UserService, loginUrl string) func(next http.Handler) http.Handler {
@@ -36,9 +31,16 @@ func AuthMiddleware(userService domain.UserService, loginUrl string) func(next h
 				return
 			}
 
-			user, err := userService.GetOrCreate(token)
+			userinfo, err := auth.GetUserInfo(token)
 			if err != nil {
-				log.Error().Err(err).Msg("Failed to get user from token")
+				log.Debug().Msg("Token not valid for request")
+				redirectToLogin(writer, request)
+				return
+			}
+
+			user, err := userService.GetOrCreate(userinfo.Email)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to get user from email")
 				redirectToLogin(writer, request)
 				return
 			}

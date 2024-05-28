@@ -42,3 +42,8 @@ function isOpen(id) {
   const elm = document.getElementById(id)
   return !elm.hidden && elm.style.display !== "none"
 }
+
+function handleError(event) {
+  const response = event.detail.xhr.response
+  alert(response)
+}

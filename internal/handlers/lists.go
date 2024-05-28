@@ -73,9 +73,9 @@ func ListCreate(listService domain.ListService) http.Handler {
 		created, err := listService.Create(name, user)
 
 		if errors.Is(err, domain.UniqueViolationError) {
-			log.Debug().Msgf("list already exists for user: %s with name: %s", user.Email, name)
+			log.Debug().Msgf("list already exists for user: \"%s\" with name: \"%s\"", user.Email, name)
 			writer.WriteHeader(http.StatusConflict)
-			io.WriteString(writer, fmt.Sprintf("Liste med navn: %s eksisterer allerede", name))
+			io.WriteString(writer, fmt.Sprintf("Liste med navn: \"%s\" eksisterer allerede", name))
 			return
 		} else if err != nil {
 			log.Error().Err(err).Msg("failed to create list for user")
