@@ -21,8 +21,8 @@ type (
 		bun.BaseModel `bun:"table:lists,alias:l"`
 
 		Id        int         `bun:",pk,autoincrement"`
-		Name      string      `bun:",notnull"`
-		UserId    int         `bun:",notnull"`
+    Name      string      `bun:",notnull,unique:list"`
+    UserId    int         `bun:",notnull,unique:list"`
 		User      *User       `bun:"rel:has-one,join:user_id=id"`
 		ListItems []*ListItem `bun:"rel:has-many,join:id=list_id"`
 	}

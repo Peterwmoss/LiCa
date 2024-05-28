@@ -3,6 +3,7 @@ module github.com/Peterwmoss/LiCa
 go 1.22
 
 require (
+	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/joho/godotenv v1.5.1
 	github.com/rs/zerolog v1.31.0
 	github.com/uptrace/bun v1.1.16

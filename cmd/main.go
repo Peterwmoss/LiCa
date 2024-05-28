@@ -82,6 +82,8 @@ func main() {
 
 	server.Handle("GET /", authMiddleware(handlers.GetIndex()))
 
+	server.Handle("GET /actions/new-list", authMiddleware(handlers.NewList()))
+
 	server.Handle("GET /lists", authMiddleware(handlers.ListGetAll(listService)))
 	server.Handle("GET /lists/{id}", authMiddleware(handlers.ListGet(listService)))
 	server.Handle("POST /lists", authMiddleware(handlers.ListCreate(listService)))

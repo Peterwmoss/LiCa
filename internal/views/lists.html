@@ -1,17 +1,28 @@
 {{ block "listsWrapper" . }}
   <div>
     <p>Dine indkøbslister</p>
-    <button hx-get="/lists/new">+</button>
+    <button hx-get="/actions/new-list" hx-target="#lists" hx-swap="afterbegin">+</button>
     <div id="lists" hx-trigger="load" hx-get="/lists" />
+  </div>
+{{ end }}
+
+{{ block "new_list" . }}
+  <div>
+    <input name="list-name" placeholder="Listenavn..."/>
+    <button hx-post="/lists" hx-include="[name='list-name']" hx-target="#lists" hx-swap="beforeend">Create</button>
   </div>
 {{ end }}
 
 {{ block "lists" . }}
   {{ range . }}
+    {{ template "list-item" . }}
+  {{ end }}
+{{ end }}
+
+{{ block "list-item" . }}
     <div hx-get="/lists/{{ .Id }}" hx-target="main" hx-push-url="true">
       <p>{{ .Name }}</p>
     </div>
-  {{ end }}
 {{ end }}
 
 {{ block "list" . }}

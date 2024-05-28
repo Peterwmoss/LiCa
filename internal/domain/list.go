@@ -2,11 +2,14 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Peterwmoss/LiCa/internal/database"
+	"github.com/jackc/pgerrcode"
 	"github.com/rs/zerolog/log"
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
 
 type (
@@ -31,7 +34,7 @@ type (
 )
 
 func (l List) String() string {
-  return fmt.Sprintf("Name: %s", l.Name)
+	return fmt.Sprintf("Name: %s", l.Name)
 }
 
 func NewListService(db *bun.DB, ctx context.Context, listItemService ListItemService) ListService {
@@ -93,6 +96,11 @@ func (svc listService) Create(name string, user User) (*List, error) {
 		Model(&list).
 		Exec(svc.ctx)
 	if err != nil {
+    errStatusCode := err.(pgdriver.Error).Field('C')
+		if errStatusCode == pgerrcode.UniqueViolation {
+      return nil, errors.Join(err, UniqueViolationError)
+		}
+
 		return nil, err
 	}
 
