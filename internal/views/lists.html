@@ -1,7 +1,7 @@
 {{ block "listsWrapper" . }}
   <div>
     <p>Dine indkøbslister</p>
-    <button hx-get="/actions/new-list" hx-target="#lists" hx-swap="afterbegin">+</button>
+    <button hx-get="/actions/lists/new" hx-target="#lists" hx-swap="afterbegin">+</button>
     <div id="lists" hx-trigger="load" hx-get="/lists" />
   </div>
 {{ end }}
@@ -20,17 +20,24 @@
 {{ end }}
 
 {{ block "list-item" . }}
-    <div hx-get="/lists/{{ .Id }}" hx-target="main" hx-push-url="true">
+    <div hx-get="/lists/{{ .Id }}" hx-target="main">
       <p>{{ .Name }}</p>
     </div>
 {{ end }}
 
 {{ block "list" . }}
   {{ .Name }}
-  {{ range .Items }}
-    <div>
-      <p>{{ .Name }}</p>
-      <p>{{ .Category }}</p>
-    </div>
-  {{ end }}
+  <form hx-post="/lists/{{ .Id }}/items" hx-target="#items" hx-swap="beforeend" hx-on:htmx:response-error="handleError(event)">
+    <input name="item-name" placeholder="Tilføj til liste..."/>
+    {{ template "category-select" . }}
+    <button>Create</button>
+  </form>
+  <div id="items">
+    {{ range .Items }}
+      <div>
+        <p>{{ .Name }}</p>
+        <p>{{ .Category }}</p>
+      </div>
+    {{ end }}
+  </div>
 {{ end }}

@@ -65,7 +65,7 @@ func main() {
 	userService := domain.NewUserService(db, ctx)
 	categoryService := domain.NewCategoryService(db, ctx)
 	productService := domain.NewProductService(db, ctx, categoryService)
-	listItemService := domain.NewListItemService(productService)
+	listItemService := domain.NewListItemService(db, ctx, productService, categoryService)
 	listService := domain.NewListService(db, ctx, listItemService)
 
 	staticHandler := http.FileServer(http.Dir("./internal/assets"))
@@ -82,11 +82,15 @@ func main() {
 
 	server.Handle("GET /", authMiddleware(handlers.GetIndex()))
 
-	server.Handle("GET /actions/new-list", authMiddleware(handlers.NewList()))
+	server.Handle("GET /actions/lists/new", authMiddleware(handlers.NewList()))
+	server.Handle("GET /actions/lists/{id}/items", authMiddleware(handlers.NewItem()))
+	server.Handle("GET /actions/categories/options", authMiddleware(handlers.SelectCategory(categoryService)))
 
 	server.Handle("GET /lists", authMiddleware(handlers.ListGetAll(listService)))
 	server.Handle("GET /lists/{id}", authMiddleware(handlers.ListGet(listService)))
 	server.Handle("POST /lists", authMiddleware(handlers.ListCreate(listService)))
+
+	server.Handle("POST /lists/{id}/items", authMiddleware(handlers.ListItemCreate(productService, categoryService, listService, listItemService)))
 
 	server.Handle(authGetUrl+"login", handlers.AuthLogin(authConfig, authStateCheck))
 	server.Handle(authGetUrl+"logout", handlers.AuthLogout())

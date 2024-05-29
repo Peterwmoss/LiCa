@@ -10,7 +10,7 @@ import (
 
 type (
 	Category struct {
-		id       int
+		Id       int
 		Name     string
 		Order    int
 		IsCustom bool
@@ -20,6 +20,8 @@ type (
 		GetAll(User) ([]Category, error)
 		ToDomain(database.Category) Category
 		FromDomain(Category, User) database.Category
+
+		GetById(id int) (*Category, error)
 	}
 
 	categoryService struct {
@@ -37,11 +39,11 @@ func (service categoryService) GetAll(user User) ([]Category, error) {
 
 	err := service.db.NewSelect().
 		Model(&arr).
-		Where("user_id = ?", user.id).
+		Where("user_id = ? or user_id IS NULL", user.id).
 		Relation("Orders").
 		Scan(service.ctx)
 	if err != nil {
-    return nil, fmt.Errorf("GetAll: failed to get categories for user: %d: %w", user.id, err)
+		return nil, fmt.Errorf("GetAll: failed to get categories for user: %d: %w", user.id, err)
 	}
 
 	categories := make([]Category, len(arr))
@@ -52,13 +54,31 @@ func (service categoryService) GetAll(user User) ([]Category, error) {
 	return categories, nil
 }
 
+func (service categoryService) GetById(id int) (*Category, error) {
+	category := database.Category{}
+
+	err := service.db.NewSelect().
+		Model(&category).
+		Where("id = ?", id).
+		Relation("Orders").
+		Limit(1).
+		Scan(service.ctx)
+	if err != nil {
+		return nil, fmt.Errorf("GetById: failed to get category with id: %d: %w", id, err)
+	}
+
+	domainCategory := service.ToDomain(category)
+
+	return &domainCategory, nil
+}
+
 func (categoryService) ToDomain(category database.Category) Category {
 	order := 0
 	if len(category.Orders) > 0 {
 		order = category.Orders[0].Order
 	}
 	return Category{
-		id:       category.Id,
+		Id:       category.Id,
 		Name:     category.Name,
 		Order:    order,
 		IsCustom: category.IsCustom,
@@ -67,11 +87,11 @@ func (categoryService) ToDomain(category database.Category) Category {
 
 func (categoryService) FromDomain(category Category, user User) database.Category {
 	return database.Category{
-		Id:   category.id,
+		Id:   category.Id,
 		Name: category.Name,
 		Orders: []database.CategoryOrder{
 			{
-				CategoryId: category.id,
+				CategoryId: category.Id,
 				UserId:     user.id,
 				Order:      category.Order,
 			},

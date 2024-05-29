@@ -97,14 +97,3 @@ func ListCreate(listService domain.ListService) http.Handler {
 		templates.Render(writer, "list-item", created)
 	})
 }
-
-func NewList() http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if !isHTMXRequest(request) {
-			writer.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		templates.Render(writer, "new_list", nil)
-	})
-}

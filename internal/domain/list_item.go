@@ -1,6 +1,14 @@
 package domain
 
-import "github.com/Peterwmoss/LiCa/internal/database"
+import (
+	"context"
+	"errors"
+
+	"github.com/Peterwmoss/LiCa/internal/database"
+	"github.com/jackc/pgerrcode"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/driver/pgdriver"
+)
 
 type (
 	ListItem struct {
@@ -13,14 +21,42 @@ type (
 	ListItemService interface {
 		ToDomain(database.ListItem) ListItem
 		ToDatabase(ListItem, List) database.ListItem
+		Create(*Product, *List) (*ListItem, error)
 	}
 	listItemService struct {
-		productService ProductService
+		productService  ProductService
+		categoryService CategoryService
+		db              *bun.DB
+		ctx             context.Context
 	}
 )
 
-func NewListItemService(productService ProductService) ListItemService {
-	return &listItemService{productService}
+func NewListItemService(db *bun.DB, ctx context.Context, productService ProductService, categoryService CategoryService) ListItemService {
+	return &listItemService{productService, categoryService, db, ctx}
+}
+
+func (svc listItemService) Create(product *Product, list *List) (*ListItem, error) {
+	listItem := ListItem{
+		Product: *product,
+		Amount:  1,
+		Unit:    Unit{Unit: "stk."},
+	}
+
+	databaseListItem := svc.ToDatabase(listItem, *list)
+
+	_, err := svc.db.NewInsert().
+		Model(&databaseListItem).
+		Exec(svc.ctx)
+	if err != nil {
+		errStatusCode := err.(pgdriver.Error).Field('C')
+		if errStatusCode == pgerrcode.UniqueViolation {
+			return nil, errors.Join(err, UniqueViolationError)
+		}
+
+		return nil, err
+	}
+
+	return &listItem, nil
 }
 
 func (svc listItemService) ToDomain(listItem database.ListItem) ListItem {
@@ -38,6 +74,6 @@ func (svc listItemService) ToDatabase(listItem ListItem, list List) database.Lis
 		Unit:      &listItem.Unit.Unit,
 		Amount:    listItem.Amount,
 		ListId:    list.Id,
-		ProductId: listItem.Product.id,
+		ProductId: listItem.Product.Id,
 	}
 }
