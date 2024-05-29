@@ -100,3 +100,14 @@ func main() {
 		log.Fatal().Msg("Failed to start api")
 	}
 }
+
+type services struct {
+  user
+  category
+  product
+  list
+}
+
+func initServices() *services {
+  return nil
+}

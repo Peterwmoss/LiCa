@@ -26,3 +26,6 @@ postgres-rm: postgres-stop
 clean:
 	rm -rf ./bin
 	go mod tidy
+
+test:
+	go test -v ./... -cover
