@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
 )
 
@@ -42,7 +43,7 @@ type ProductName string
 
 func NewProductName(name string) (ProductName, error) {
 	if name == "" {
-		return "", ErrInvalidProductName
+    return "", errors.Join(ErrInvalidProductName, core.ErrValidation)
 	}
 
 	return ProductName(name), nil

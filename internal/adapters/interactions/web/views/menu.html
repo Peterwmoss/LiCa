@@ -1,0 +1,10 @@
+{{ block "menu" . }}
+<header>
+  <ul>
+    <li hx-get="/pages/lists" hx-target="#page" hx-trigger="load, click">Lists</li>
+    <li hx-get="/pages/products" hx-target="#page">Products</li>
+    <li hx-get="/pages/categories" hx-target="#page">Categories</li>
+    <li hx-get="/pages/more" hx-target="#page">More</li>
+  </ul>
+</header>
+{{ end }}

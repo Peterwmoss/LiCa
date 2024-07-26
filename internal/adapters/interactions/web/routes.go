@@ -5,12 +5,16 @@ import (
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/auth"
 	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/handlers"
+	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/handlers/actions"
+	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/handlers/components"
+	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/handlers/pages"
 	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/middleware"
 	"github.com/Peterwmoss/LiCa/internal/core/domain/ports"
 )
 
 type Router struct {
 	UserService ports.UserService
+	ListService ports.ListService
 }
 
 func (r *Router) SetupRoutes(server *http.ServeMux) {
@@ -19,23 +23,23 @@ func (r *Router) SetupRoutes(server *http.ServeMux) {
 	server.Handle("GET /auth/logout", handlers.AuthLogout())
 	server.Handle("GET /auth/callback", handlers.AuthCallback(oauthConfig, r.UserService))
 
-	authMiddleware := middleware.AuthMiddleware(r.UserService, "/auth/login")
+	authMiddleware := middleware.AuthMiddleware(r.UserService, "/auth/login", oauthConfig)
+
+	indexPage := pages.Index{}
+	listPage := pages.List{ListService: r.ListService}
+
+	listAction := actions.List{ListService: r.ListService, ListPage: listPage}
+
+	listComponent := components.List{}
 
 	server.Handle("GET /public/", handlers.StaticHandler())
-	server.Handle("GET /", authMiddleware(handlers.HtmlIndex()))
 
-	//
-	// server.Handle("GET /actions/lists/new", authMiddleware(handlers.NewList()))
-	// server.Handle("GET /actions/lists/{id}/items", authMiddleware(handlers.NewItem()))
-	// server.Handle("GET /actions/categories/options", authMiddleware(handlers.SelectCategory(categoryService)))
-	//
-	// server.Handle("GET /lists", authMiddleware(handlers.ListGetAll(listService)))
-	// server.Handle("GET /lists/{id}", authMiddleware(handlers.ListGet(listService)))
-	// server.Handle("POST /lists", authMiddleware(handlers.ListCreate(listService)))
-	//
-	// server.Handle("POST /lists/{id}/items", authMiddleware(handlers.ListItemCreate(productService, categoryService, listService, listItemService)))
-	//
-	// server.Handle(authGetUrl+"login", handlers.AuthLogin(authConfig, authStateCheck))
-	// server.Handle(authGetUrl+"logout", handlers.AuthLogout())
-	// server.Handle(authGetUrl+"callback", handlers.AuthCallback(authConfig, authStateCheck, userService))
+	server.Handle("GET /", authMiddleware(http.HandlerFunc(indexPage.Index)))
+
+	server.Handle("GET /components/lists/new", authMiddleware(http.HandlerFunc(listComponent.New)))
+
+	server.Handle("POST /actions/lists", authMiddleware(http.HandlerFunc(listAction.Create)))
+
+	server.Handle("GET /pages/lists", authMiddleware(http.HandlerFunc(listPage.Lists)))
+	server.Handle("GET /pages/lists/{name}", authMiddleware(http.HandlerFunc(listPage.List)))
 }

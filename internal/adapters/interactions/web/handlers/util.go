@@ -1,21 +1,23 @@
 package handlers
 
 import (
+	"errors"
 	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/responses"
+	"github.com/Peterwmoss/LiCa/internal/core"
 )
 
-func isHTMXRequest(request *http.Request) bool {
+func IsHTMXRequest(request *http.Request) bool {
 	return request.Header.Get("HX-Request") != ""
 }
 
-func runWithContext(writer http.ResponseWriter, request *http.Request, worker func(chan responses.Response)) {
+func RunWithContext(writer http.ResponseWriter, request *http.Request, worker func(chan responses.Response)) {
 	resultCh := make(chan responses.Response)
 
-  go worker(resultCh)
+	go worker(resultCh)
 
 	for {
 		select {
@@ -23,16 +25,29 @@ func runWithContext(writer http.ResponseWriter, request *http.Request, worker fu
 			slog.Warn("context canceled")
 			return
 		case res := <-resultCh:
-			if res.Err() != nil {
-        slog.Error("error", "error", res.Err())
-        writer.WriteHeader(500)
-        io.WriteString(writer, "Internal server error")
+			if res.Err == nil {
+				writer.WriteHeader(res.StatusCode)
+				io.WriteString(writer, res.Data)
 				return
 			}
 
-			writer.WriteHeader(res.StatusCode())
-			io.WriteString(writer, res.Message())
+			if errors.Is(res.Err, core.ErrValidation) {
+				err := errors.Join(res.Err, ErrBadRequest)
+				slog.Error("error", "message", res.Err)
+				HandleError(writer, err)
+				return
+			}
+      
+			if errors.Is(res.Err, core.ErrNotFound) {
+				err := errors.Join(res.Err, ErrNotFound)
+				slog.Error("error", "message", res.Err)
+				HandleError(writer, err)
+				return
+			}
+
+			err := errors.Join(res.Err, ErrInternalServerError)
+			slog.Error("error", "message", res.Err)
+			HandleError(writer, err)
 		}
 	}
-
 }

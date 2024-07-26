@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/auth"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
@@ -30,7 +31,7 @@ func init() {
 
 func AuthLogin(oauth2Config *oauth2.Config) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		redirectUrl := oauth2Config.AuthCodeURL(authStateCheck)
+		redirectUrl := oauth2Config.AuthCodeURL(authStateCheck, oauth2.AccessTypeOffline)
 		http.Redirect(writer, request, redirectUrl, http.StatusSeeOther)
 	})
 }
@@ -53,7 +54,7 @@ func AuthCallback(oauth2Config *oauth2.Config, userService ports.UserService) ht
 			return
 		}
 
-		userinfo, err := auth.GetUserInfo(token.AccessToken)
+		userinfo, err := auth.GetUserInfo(request.Context(), token, oauth2Config)
 		if err != nil {
 			slog.Error("Failed to get userinfo", "error", err)
 			writer.WriteHeader(http.StatusInternalServerError)
@@ -80,20 +81,26 @@ func AuthCallback(oauth2Config *oauth2.Config, userService ports.UserService) ht
 		if user.Id == uuid.Nil {
 			user, err = userService.Create(request.Context(), string(email))
 			if err != nil {
-				slog.Error("Failed to create user ", "error", err)
+				slog.Error("Failed to create user", "error", err)
 				writer.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 		}
 
 		http.SetCookie(writer, &http.Cookie{
-			Name:  "token",
+			Name:  auth.TokenCookieName,
 			Path:  "/",
 			Value: token.AccessToken,
 		})
 
 		http.SetCookie(writer, &http.Cookie{
-			Name:  "refreshToken",
+			Name:  auth.TokenExpiryCookieName,
+			Path:  "/",
+			Value: strconv.Itoa(int(token.Expiry.Unix())),
+		})
+
+		http.SetCookie(writer, &http.Cookie{
+			Name:  auth.RefreshTokenCookieName,
 			Path:  "/",
 			Value: token.RefreshToken,
 		})
@@ -105,12 +112,21 @@ func AuthCallback(oauth2Config *oauth2.Config, userService ports.UserService) ht
 func AuthLogout() http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		http.SetCookie(writer, &http.Cookie{
-			Name:  "token",
-			Value: "",
+			Name:  auth.TokenCookieName,
+			Path:  "/",
+      MaxAge: -1,
 		})
+
 		http.SetCookie(writer, &http.Cookie{
-			Name:  "refreshToken",
-			Value: "",
+			Name:  auth.TokenExpiryCookieName,
+			Path:  "/",
+      MaxAge: -1,
+		})
+
+		http.SetCookie(writer, &http.Cookie{
+			Name:  auth.RefreshTokenCookieName,
+			Path:  "/",
+      MaxAge: -1,
 		})
 
 		writer.WriteHeader(http.StatusNoContent)

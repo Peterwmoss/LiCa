@@ -1,17 +1,15 @@
 package responses
 
-type Response interface {
-	Err() error
-	StatusCode() int
-	Message() string
+type Response struct {
+	Data       string
+	Err        error
+	StatusCode int
 }
 
-type GenericResponse struct {
-	Msg    string
-	Error  error
-	Status int
+func NewResponse(data string, err error, status int) Response {
+	return Response{
+		Data:   data,
+		Err:    err,
+		StatusCode: status,
+	}
 }
-
-func (r GenericResponse) Message() string { return r.Msg }
-func (r GenericResponse) Err() error      { return r.Error }
-func (r GenericResponse) StatusCode() int { return r.Status }

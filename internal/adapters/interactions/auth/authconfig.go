@@ -1,24 +1,32 @@
 package auth
 
 import (
-	"github.com/rs/zerolog/log"
+	"fmt"
+	"log/slog"
+	"os"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"os"
+)
+
+const (
+	TokenCookieName        = "token"
+	RefreshTokenCookieName = "token_refresh"
+	TokenExpiryCookieName  = "token_expiry"
 )
 
 func NewOauth2Config(baseUrl string) *oauth2.Config {
 	clientId := os.Getenv("GOOGLE_CLIENT_ID")
-	log.Debug().Msgf("ClientID: %s", clientId)
+	slog.Debug(fmt.Sprintf("ClientID: %s", clientId))
 
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
-	log.Debug().Msgf("ClientSecret: %s", clientSecret)
+	slog.Debug(fmt.Sprintf("ClientSecret: %s", clientSecret))
 
 	host := os.Getenv("LICA_HOST")
 	if host == "" {
 		host = "http://localhost:3000"
 	}
-	log.Debug().Msgf("Host: %s", host)
+	slog.Debug(fmt.Sprintf("Host: %s", host))
 
 	return &oauth2.Config{
 		RedirectURL:  host + baseUrl + "/callback",

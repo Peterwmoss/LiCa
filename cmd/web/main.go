@@ -13,23 +13,23 @@ import (
 	"github.com/Peterwmoss/LiCa/internal/core/domain/services"
 )
 
-
 func main() {
 	db := postgresql.Get()
 	defer db.Close()
 
-  // listRepo := repositories.NewListRepository(db)
-  // listService := services.NewListService(listRepo, nil)
+	userRepo := repositories.NewUserRepository(db)
+	userService := services.NewUserService(userRepo)
 
-  userRepo := repositories.NewUserRepository(db)
-  userService := services.NewUserService(userRepo)
+	listRepo := repositories.NewListRepository(db)
+	listService := services.NewListService(listRepo, userRepo)
 
-  router := web.Router{
-    UserService: userService,
-  }
+	router := web.Router{
+		UserService: userService,
+		ListService: listService,
+	}
 
-  if err := web.Serve(router, web.WithPort(3000)); err != nil {
+	if err := web.Serve(router, web.WithPort(3000)); err != nil {
 		slog.Error("Failed to start api")
-    os.Exit(1)
-  }
+		os.Exit(1)
+	}
 }

@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
 )
 
@@ -42,7 +43,7 @@ type ListName string
 
 func NewListName(name string) (ListName, error) {
 	if name == "" {
-		return "", ErrInvalidListName
+    return "", errors.Join(ErrInvalidListName, core.ErrValidation)
 	}
 
 	return ListName(name), nil

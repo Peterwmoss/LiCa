@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
 )
 
@@ -42,7 +43,7 @@ type Amount float32
 
 func NewAmount(amount float32) (Amount, error) {
 	if amount < 1 {
-		return 0, ErrInvalidListItemAmount
+    return 0, errors.Join(ErrInvalidListItemAmount, core.ErrValidation)
 	}
 
 	return Amount(amount), nil

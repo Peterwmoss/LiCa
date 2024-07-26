@@ -20,45 +20,45 @@ func NewUserHandler(userService ports.UserService) UserHandler {
 }
 
 func (h *UserHandler) Create(writer http.ResponseWriter, request *http.Request) {
-	runWithContext(writer, request, func(c chan responses.Response) {
-    email := request.Context().Value("user").(domain.User).Email
+	RunWithContext(writer, request, func(c chan responses.Response) {
+		email := request.Context().Value("user").(domain.User).Email
 		user, err := h.userService.Create(request.Context(), string(email))
 		if err != nil {
-			c <- responses.GenericResponse{Error: err}
+			c <- responses.Response{Err: err}
 			return
 		}
 
 		bytes, err := json.Marshal(user)
 		if err != nil {
-			c <- responses.GenericResponse{Error: err}
+			c <- responses.Response{Err: err}
 			return
 		}
 
-		c <- responses.GenericResponse{
-			Msg:    string(bytes),
-			Status: http.StatusCreated,
+		c <- responses.Response{
+			Data:       string(bytes),
+			StatusCode: http.StatusCreated,
 		}
 	})
 }
 
 func (h *UserHandler) Get(writer http.ResponseWriter, request *http.Request) {
-	runWithContext(writer, request, func(c chan responses.Response) {
-    email := request.Context().Value("user").(domain.User).Email
+	RunWithContext(writer, request, func(c chan responses.Response) {
+		email := request.Context().Value("user").(domain.User).Email
 		user, err := h.userService.Get(request.Context(), string(email))
 		if err != nil {
-			c <- responses.GenericResponse{Error: err}
+			c <- responses.Response{Err: err}
 			return
 		}
 
 		bytes, err := json.Marshal(user)
 		if err != nil {
-			c <- responses.GenericResponse{Error: err}
+			c <- responses.Response{Err: err}
 			return
 		}
 
-		c <- responses.GenericResponse{
-			Msg:    string(bytes),
-			Status: http.StatusOK,
+		c <- responses.Response{
+			Data:       string(bytes),
+			StatusCode: http.StatusOK,
 		}
 	})
 }

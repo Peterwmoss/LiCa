@@ -13,7 +13,7 @@ func DbProductToDomain(dbProduct postgresql.Product) (domain.Product, error) {
 
 	domainCategories := make([]domain.Category, len(dbProduct.Categories))
 	for i, category := range dbProduct.Categories {
-		domainCategory, err := DbCategoryToDomain(category)
+		domainCategory, err := DbCategoryToDomain(category.Category)
 		if err != nil {
 			return domain.Product{}, err
 		}

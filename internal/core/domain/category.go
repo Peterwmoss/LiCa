@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
 )
 
@@ -36,7 +37,7 @@ type CategoryName string
 
 func NewCategoryName(name string) (CategoryName, error) {
 	if name == "" {
-		return "", ErrInvalidCategoryName
+		return "", errors.Join(ErrInvalidCategoryName, core.ErrValidation)
 	}
 
 	return CategoryName(name), nil

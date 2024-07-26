@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
 )
 
@@ -34,7 +35,7 @@ type Email string
 
 func NewEmail(email string) (Email, error) {
 	if !strings.Contains(email, "@") {
-		return "", ErrInvalidEmail
+    return "", errors.Join(ErrInvalidEmail, core.ErrValidation)
 	}
 
 	return Email(email), nil

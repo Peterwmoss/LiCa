@@ -1,11 +1,13 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"log/slog"
-	"net/http"
+
+	"golang.org/x/oauth2"
 )
 
 type (
@@ -18,9 +20,10 @@ type (
 	}
 )
 
-func GetUserInfo(token string) (UserInfo, error) {
+func GetUserInfo(ctx context.Context, token *oauth2.Token, config *oauth2.Config) (UserInfo, error) {
 	slog.Debug("Fetching userinfo", "token", token)
-	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token)
+	client := config.Client(ctx, token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
 		slog.Error("Get request failed", "error", err)
 		return UserInfo{}, err

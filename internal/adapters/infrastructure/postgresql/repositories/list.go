@@ -33,12 +33,13 @@ func (repo *ListRepository) Get(ctx context.Context, email domain.Email, name do
 	err := repo.db.NewSelect().
 		Model(&dbList).
 		Where("name = ?", name).
-		Where("u.email = ?", email).
+		Where("email like ?", string(email)).
 		Relation("User").
 		Relation("ListItems").
 		Relation("ListItems.Product").
 		Relation("ListItems.Category").
 		Relation("ListItems.Product.Categories").
+		Relation("ListItems.Product.Categories.Category").
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
@@ -48,8 +49,34 @@ func (repo *ListRepository) Get(ctx context.Context, email domain.Email, name do
 	return mappers.DbListToDomain(dbList)
 }
 
-func (l *ListRepository) GetAllByEmail(ctx context.Context, email domain.Email) ([]domain.List, error) {
-	panic("unimplemented")
+func (repo *ListRepository) GetAllByEmail(ctx context.Context, email domain.Email) ([]domain.List, error) {
+	var dbLists []postgresql.List
+
+	err := repo.db.NewSelect().
+		Model(&dbLists).
+		Where("email like ?", string(email)).
+		Relation("User").
+		Relation("ListItems").
+		Relation("ListItems.Product").
+		Relation("ListItems.Category").
+		Relation("ListItems.Product.Categories").
+		Relation("ListItems.Product.Categories.Category").
+		Scan(ctx)
+	if err != nil {
+		return []domain.List{}, err
+	}
+
+	lists := make([]domain.List, len(dbLists))
+
+	for idx, dbList := range dbLists {
+		list, err := mappers.DbListToDomain(dbList)
+		if err != nil {
+			return []domain.List{}, err
+		}
+		lists[idx] = list
+	}
+
+	return lists, nil
 }
 
 func (l *ListRepository) Create(ctx context.Context, list domain.List) error {
