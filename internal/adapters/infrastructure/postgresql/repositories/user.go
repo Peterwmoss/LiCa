@@ -36,11 +36,8 @@ func (u *UserRepository) Create(ctx context.Context, user domain.User) error {
 		_, err := tx.NewInsert().
 			Model(&dbUser).
 			Exec(ctx)
-		if err != nil {
-			return err
-		}
 
-    return nil
+    return err
 	})
 }
 
@@ -50,7 +47,7 @@ func (u *UserRepository) GetByEmail(ctx context.Context, email domain.Email) (do
 	dbUser := postgresql.User{}
 	err := u.db.NewSelect().
 		Model(&dbUser).
-		Where("email like ?", string(email)).
+		Where("? like ?", bun.Ident("u.email"), string(email)).
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
@@ -63,10 +60,6 @@ func (u *UserRepository) GetByEmail(ctx context.Context, email domain.Email) (do
 	}
 
 	return mappers.DbUserToDomain(dbUser)
-}
-
-func (u *UserRepository) GetById(ctx context.Context, id uuid.UUID) (domain.User, error) {
-	panic("unimplemented")
 }
 
 func (u *UserRepository) UpdateEmail(ctx context.Context, id uuid.UUID, email domain.Email) error {

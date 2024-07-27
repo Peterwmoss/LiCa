@@ -11,10 +11,8 @@ func DbCategoryToDomain(dbCategory postgresql.Category) (domain.Category, error)
 		return domain.Category{}, err
 	}
 
-	domainUser, err := DbUserToDomain(dbCategory.User)
-	if err != nil {
-		return domain.Category{}, err
-	}
+	// Ignore failed user mapping in case no user is connected to category
+	domainUser, _ := DbUserToDomain(dbCategory.User)
 
 	return domain.Category{
 		Id:   dbCategory.Id,

@@ -17,11 +17,13 @@ type ListItem struct {
 	Amount   Amount
 	Unit     Unit
 	Category Category
+	List     List
 }
 
-func NewListItem(id uuid.UUID, product Product, amount Amount, unit Unit, category Category) ListItem {
+func NewListItem(id uuid.UUID, list List, product Product, amount Amount, unit Unit, category Category) ListItem {
 	return ListItem{
 		Id:       id,
+		List:     list,
 		Product:  product,
 		Amount:   amount,
 		Unit:     unit,
@@ -29,9 +31,10 @@ func NewListItem(id uuid.UUID, product Product, amount Amount, unit Unit, catego
 	}
 }
 
-func CreateListItem(product Product, amount Amount, unit Unit, category Category) ListItem {
+func CreateListItem(list List, product Product, amount Amount, unit Unit, category Category) ListItem {
 	return ListItem{
 		Id:       uuid.New(),
+		List:     list,
 		Product:  product,
 		Amount:   amount,
 		Unit:     unit,
@@ -43,7 +46,7 @@ type Amount float32
 
 func NewAmount(amount float32) (Amount, error) {
 	if amount < 1 {
-    return 0, errors.Join(ErrInvalidListItemAmount, core.ErrValidation)
+		return 0, errors.Join(ErrInvalidListItemAmount, core.ErrValidation)
 	}
 
 	return Amount(amount), nil

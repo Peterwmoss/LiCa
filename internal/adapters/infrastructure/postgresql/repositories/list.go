@@ -27,15 +27,17 @@ func NewListRepository(db *bun.DB) ports.ListRepository {
 	}
 }
 
-func (repo *ListRepository) Get(ctx context.Context, email domain.Email, name domain.ListName) (domain.List, error) {
+func (r *ListRepository) Get(ctx context.Context, user domain.User, name domain.ListName) (domain.List, error) {
 	dbList := postgresql.List{}
 
-	err := repo.db.NewSelect().
+	err := r.db.NewSelect().
 		Model(&dbList).
 		Where("name = ?", name).
-		Where("email like ?", string(email)).
+		Where("? like ?", bun.Ident("user.email"), string(user.Email)).
 		Relation("User").
 		Relation("ListItems").
+		Relation("ListItems.List").
+		Relation("ListItems.List.User").
 		Relation("ListItems.Product").
 		Relation("ListItems.Category").
 		Relation("ListItems.Product.Categories").
@@ -49,12 +51,12 @@ func (repo *ListRepository) Get(ctx context.Context, email domain.Email, name do
 	return mappers.DbListToDomain(dbList)
 }
 
-func (repo *ListRepository) GetAllByEmail(ctx context.Context, email domain.Email) ([]domain.List, error) {
+func (r *ListRepository) GetAll(ctx context.Context, user domain.User) ([]domain.List, error) {
 	var dbLists []postgresql.List
 
-	err := repo.db.NewSelect().
+	err := r.db.NewSelect().
 		Model(&dbLists).
-		Where("email like ?", string(email)).
+		Where("? like ?", bun.Ident("user.email"), string(user.Email)).
 		Relation("User").
 		Relation("ListItems").
 		Relation("ListItems.Product").
@@ -66,21 +68,11 @@ func (repo *ListRepository) GetAllByEmail(ctx context.Context, email domain.Emai
 		return []domain.List{}, err
 	}
 
-	lists := make([]domain.List, len(dbLists))
-
-	for idx, dbList := range dbLists {
-		list, err := mappers.DbListToDomain(dbList)
-		if err != nil {
-			return []domain.List{}, err
-		}
-		lists[idx] = list
-	}
-
-	return lists, nil
+	return mappers.Map(dbLists, mappers.DbListToDomain)
 }
 
-func (l *ListRepository) Create(ctx context.Context, list domain.List) error {
-	return l.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+func (r *ListRepository) Create(ctx context.Context, list domain.List) error {
+	return r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		dbList := postgresql.List{
 			Id:        list.Id,
 			Name:      string(list.Name),
@@ -99,8 +91,8 @@ func (l *ListRepository) Create(ctx context.Context, list domain.List) error {
 	})
 }
 
-func (l *ListRepository) Update(ctx context.Context, list domain.List) error {
-	existing, err := l.Get(ctx, list.User.Email, list.Name)
+func (r *ListRepository) Update(ctx context.Context, list domain.List) error {
+	existing, err := r.Get(ctx, list.User, list.Name)
 	if err != nil {
 		return err
 	}
@@ -109,7 +101,7 @@ func (l *ListRepository) Update(ctx context.Context, list domain.List) error {
 		return ErrListNotFound
 	}
 
-	return l.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
+	return r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
 		dbList := postgresql.List{
 			Id:        list.Id,
 			Name:      string(list.Name),

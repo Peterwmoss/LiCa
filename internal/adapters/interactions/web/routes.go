@@ -13,8 +13,11 @@ import (
 )
 
 type Router struct {
-	UserService ports.UserService
-	ListService ports.ListService
+	UserService     ports.UserService
+	ListService     ports.ListService
+	ListItemService ports.ListItemService
+	ProductService  ports.ProductService
+	CategoryService ports.CategoryService
 }
 
 func (r *Router) SetupRoutes(server *http.ServeMux) {
@@ -29,16 +32,20 @@ func (r *Router) SetupRoutes(server *http.ServeMux) {
 	listPage := pages.List{ListService: r.ListService}
 
 	listAction := actions.List{ListService: r.ListService, ListPage: listPage}
+	listItemAction := actions.ListItem{ListItemService: r.ListItemService, ListPage: listPage}
 
 	listComponent := components.List{}
+	listItemsComponent := components.ListItem{CategoryService: r.CategoryService}
 
 	server.Handle("GET /public/", handlers.StaticHandler())
 
 	server.Handle("GET /", authMiddleware(http.HandlerFunc(indexPage.Index)))
 
 	server.Handle("GET /components/lists/new", authMiddleware(http.HandlerFunc(listComponent.New)))
+	server.Handle("GET /components/items/new", authMiddleware(http.HandlerFunc(listItemsComponent.New)))
 
 	server.Handle("POST /actions/lists", authMiddleware(http.HandlerFunc(listAction.Create)))
+	server.Handle("POST /actions/items", authMiddleware(http.HandlerFunc(listItemAction.Add)))
 
 	server.Handle("GET /pages/lists", authMiddleware(http.HandlerFunc(listPage.Lists)))
 	server.Handle("GET /pages/lists/{name}", authMiddleware(http.HandlerFunc(listPage.List)))

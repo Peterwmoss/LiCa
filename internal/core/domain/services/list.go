@@ -8,14 +8,12 @@ import (
 )
 
 type ListService struct {
-	repository     ports.ListRepository
-	userRepository ports.UserRepository
+	repository ports.ListRepository
 }
 
-func NewListService(repository ports.ListRepository, userRepository ports.UserRepository) ports.ListService {
+func NewListService(repository ports.ListRepository) ports.ListService {
 	return &ListService{
 		repository,
-		userRepository,
 	}
 }
 
@@ -45,11 +43,11 @@ func (s *ListService) Get(ctx context.Context, name string) (domain.List, error)
 
 	user := ctx.Value("user").(domain.User)
 
-	return s.repository.Get(ctx, user.Email, domainName)
+	return s.repository.Get(ctx, user, domainName)
 }
 
 func (s *ListService) GetAllForUser(ctx context.Context) ([]domain.List, error) {
 	user := ctx.Value("user").(domain.User)
 
-	return s.repository.GetAllByEmail(ctx, user.Email)
+	return s.repository.GetAll(ctx, user)
 }

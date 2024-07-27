@@ -1,8 +1,10 @@
 package postgresql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/uptrace/bun"
@@ -34,10 +36,12 @@ func connect(config *DbConfig) *bun.DB {
 	sqlDb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqlDb, pgdialect.New())
 
-  db.AddQueryHook(bundebug.NewQueryHook(
-    bundebug.WithVerbose(true),
-    bundebug.FromEnv("BUNDEBUG"),
-  ))
+	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+		db.AddQueryHook(bundebug.NewQueryHook(
+			bundebug.WithVerbose(true),
+			bundebug.WithWriter(os.Stdout),
+		))
+	}
 
 	return db
 }

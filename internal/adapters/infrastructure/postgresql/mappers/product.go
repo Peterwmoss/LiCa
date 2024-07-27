@@ -3,13 +3,12 @@ package mappers
 import (
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
+	"github.com/google/uuid"
 )
 
 func DbProductToDomain(dbProduct postgresql.Product) (domain.Product, error) {
-	domainUser, err := DbUserToDomain(dbProduct.User)
-	if err != nil {
-		return domain.Product{}, err
-	}
+	// Ignore error in case no user is connected to product
+	domainUser, _ := DbUserToDomain(dbProduct.User)
 
 	domainCategories := make([]domain.Category, len(dbProduct.Categories))
 	for i, category := range dbProduct.Categories {
@@ -25,5 +24,7 @@ func DbProductToDomain(dbProduct postgresql.Product) (domain.Product, error) {
 		return domain.Product{}, err
 	}
 
-	return domain.NewProduct(dbProduct.Id, domainName, domainCategories, dbProduct.IsCustom, domainUser), nil
+	isCustom := domainUser.Id != uuid.Nil
+
+	return domain.NewProduct(dbProduct.Id, domainName, domainCategories, isCustom, domainUser), nil
 }

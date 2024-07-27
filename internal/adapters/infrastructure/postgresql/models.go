@@ -14,7 +14,6 @@ type (
 		Categories []ProductCategories `bun:"rel:has-many,join:id=product_id"`
 		UserId     uuid.UUID           `bun:",unique:products_unique"`
 		User       User                `bun:"rel:has-one,join:user_id=id"`
-		IsCustom   bool                `bun:",notnull,default:false"`
 	}
 
 	ProductCategories struct {

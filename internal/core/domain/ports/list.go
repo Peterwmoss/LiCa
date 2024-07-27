@@ -13,8 +13,8 @@ type ListService interface {
 }
 
 type ListRepository interface {
-	Get(ctx context.Context, email domain.Email, name domain.ListName) (domain.List, error)
-	GetAllByEmail(ctx context.Context, email domain.Email) ([]domain.List, error)
+	Get(ctx context.Context, user domain.User, name domain.ListName) (domain.List, error)
+	GetAll(ctx context.Context, user domain.User) ([]domain.List, error)
 	Create(ctx context.Context, list domain.List) error
 	Update(ctx context.Context, list domain.List) error
 }

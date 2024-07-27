@@ -21,11 +21,23 @@ func main() {
 	userService := services.NewUserService(userRepo)
 
 	listRepo := repositories.NewListRepository(db)
-	listService := services.NewListService(listRepo, userRepo)
+	listService := services.NewListService(listRepo)
+
+	productRepo := repositories.NewProductRepository(db)
+	productService := services.NewProductService(productRepo)
+
+	categoryRepo := repositories.NewCategoryRepository(db)
+	categoryService := services.NewCategoryService(categoryRepo)
+
+	listItemRepo := repositories.NewListItemRepository(db)
+	listItemService := services.NewListItemService(listItemRepo, productService, categoryService, listService)
 
 	router := web.Router{
-		UserService: userService,
-		ListService: listService,
+		UserService:     userService,
+		ListService:     listService,
+		ListItemService: listItemService,
+		ProductService:  productService,
+		CategoryService: categoryService,
 	}
 
 	if err := web.Serve(router, web.WithPort(3000)); err != nil {

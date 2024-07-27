@@ -17,6 +17,10 @@
 {{ block "list" . }}
 <div>
   <p>{{ .List.Name }}</p>
+  <button hx-get="/components/items/new?list={{ .List.Name }}" hx-target="#page">Add item</button>
+  {{ range .List.Items }}
+    <p>{{ .Product.Name }}</p>
+  {{ end }}
 </div>
 {{ end }}
 
@@ -26,5 +30,27 @@
   <input id="name" type="text" name="name"></input>
   <label for="name">Name</label>
   <button>Create!</button>
+</form>
+{{ end }}
+
+{{ block "list-item-new" . }}
+<button hx-get="/pages/lists/{{ .ListName }}" hx-target="#page">Cancel</button>
+<form hx-post="/actions/items" hx-target="#page">
+  <input type="hidden" name="listName" value="{{ .ListName }}"/>
+
+  <input id="product" type="text" name="product"/>
+  <label for="product">Product</label>
+
+  <select id="category" name="category">
+  {{ range .Categories }}
+    <option>{{.Name}}</option>
+  {{ end }}
+  </select>
+  <label for="category">Category</label>
+
+  <input id="amount" type="number" name="amount"/>
+  <label for="amount">Amount</label>
+
+  <button>Add!</button>
 </form>
 {{ end }}

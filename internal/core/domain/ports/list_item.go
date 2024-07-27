@@ -4,17 +4,34 @@ import (
 	"context"
 
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
+	"github.com/google/uuid"
 )
 
+type ListItemCreate struct {
+	ListName     string
+	ProductName  string
+	CategoryName string
+	Amount       float32
+}
+
+type ListItemUpdate struct {
+	Id           uuid.UUID
+	CategoryName string
+	Amount       float32
+}
+
 type ListItemService interface {
-	Add(ctx context.Context, name string) (domain.List, error)
-	Remove(ctx context.Context, name string) (domain.List, error)
-	Update(ctx context.Context) ([]domain.List, error)
+	GetAll(ctx context.Context, listName string) ([]domain.ListItem, error)
+	Add(ctx context.Context, createItem ListItemCreate) (domain.ListItem, error)
+	Remove(ctx context.Context, id uuid.UUID) error
+	Update(ctx context.Context, updateItem ListItemUpdate) error
 }
 
 type ListItemRepository interface {
-	Get(ctx context.Context, email domain.Email, name domain.ListName) (domain.List, error)
-	GetAllByEmail(ctx context.Context, email domain.Email) ([]domain.List, error)
-	Create(ctx context.Context, list domain.List) error
-	Update(ctx context.Context, list domain.List) error
+	GetAll(ctx context.Context, user domain.User, listName domain.ListName) ([]domain.ListItem, error)
+	GetById(ctx context.Context, user domain.User, id uuid.UUID) (domain.ListItem, error)
+
+	Create(ctx context.Context, user domain.User, item domain.ListItem) (domain.ListItem, error)
+	Update(ctx context.Context, user domain.User, item domain.ListItem) (domain.ListItem, error)
+	Remove(ctx context.Context, user domain.User, id uuid.UUID) error
 }
