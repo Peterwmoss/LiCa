@@ -25,18 +25,9 @@ func (s *ListService) Create(ctx context.Context, name string) (domain.List, err
 		return domain.List{}, err
 	}
 
-  user := ctx.Value("user").(domain.User)
-	domainEmail, err := domain.NewEmail(string(user.Email))
-	if err != nil {
-		return domain.List{}, err
-	}
+	user := ctx.Value("user").(domain.User)
 
-	domainUser, err := s.userRepository.GetByEmail(ctx, domainEmail)
-	if err != nil {
-		return domain.List{}, err
-	}
-
-	domainList := domain.CreateList(domainName, domainUser)
+	domainList := domain.CreateList(domainName, user)
 
 	err = s.repository.Create(ctx, domainList)
 	if err != nil {
@@ -52,21 +43,13 @@ func (s *ListService) Get(ctx context.Context, name string) (domain.List, error)
 		return domain.List{}, err
 	}
 
-  user := ctx.Value("user").(domain.User)
-	domainEmail, err := domain.NewEmail(string(user.Email))
-	if err != nil {
-		return domain.List{}, err
-	}
+	user := ctx.Value("user").(domain.User)
 
-	return s.repository.Get(ctx, domainEmail, domainName)
+	return s.repository.Get(ctx, user.Email, domainName)
 }
 
 func (s *ListService) GetAllForUser(ctx context.Context) ([]domain.List, error) {
-  user := ctx.Value("user").(domain.User)
-	domainEmail, err := domain.NewEmail(string(user.Email))
-	if err != nil {
-		return nil, err
-	}
+	user := ctx.Value("user").(domain.User)
 
-	return s.repository.GetAllByEmail(ctx, domainEmail)
+	return s.repository.GetAllByEmail(ctx, user.Email)
 }

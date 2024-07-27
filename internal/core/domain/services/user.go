@@ -7,6 +7,7 @@ import (
 	"github.com/Peterwmoss/LiCa/internal/core/domain/ports"
 )
 
+// UserService is the only service to not have the user in the context
 type UserService struct {
 	repository ports.UserRepository
 }
@@ -25,8 +26,11 @@ func (s *UserService) Create(ctx context.Context, email string) (domain.User, er
 
 	user := domain.CreateUser(domainEmail)
 	err = s.repository.Create(ctx, user)
+	if err != nil {
+		return domain.User{}, err
+	}
 
-	return user, err
+	return s.repository.GetByEmail(ctx, domainEmail)
 }
 
 func (s *UserService) Get(ctx context.Context, email string) (domain.User, error) {
