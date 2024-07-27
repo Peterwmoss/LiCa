@@ -1,0 +1,30 @@
+{{ block "lists" . }}
+  <div>
+    <p>Your lists</p>
+    <button hx-get="/components/lists/new" hx-target="#page">New List</button>
+  </div>
+
+  {{ $count := len .Lists }}
+  {{ if eq $count 0 }}
+    <p>No lists</p>
+  {{ else }}
+    {{ range .Lists }}
+      <p hx-get="/pages/lists/{{.Name}}" hx-target="#page">{{ .Name }}</p>
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ block "list" . }}
+<div>
+  <p>{{ .List.Name }}</p>
+</div>
+{{ end }}
+
+{{ block "list-new" . }}
+<button hx-get="/pages/lists" hx-target="#page">Cancel</button>
+<form hx-post="/actions/lists" hx-target="#page">
+  <input id="name" type="text" name="name"></input>
+  <label for="name">Name</label>
+  <button>Create!</button>
+</form>
+{{ end }}
