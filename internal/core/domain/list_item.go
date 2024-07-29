@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
@@ -45,8 +46,8 @@ func CreateListItem(list List, product Product, amount Amount, unit Unit, catego
 type Amount float32
 
 func NewAmount(amount float32) (Amount, error) {
-	if amount < 1 {
-		return 0, errors.Join(ErrInvalidListItemAmount, core.ErrValidation)
+	if amount < 0 {
+		return 0, fmt.Errorf("domain.NewAmount: amount must be positive\n%w\n%w", ErrInvalidListItemAmount, core.ErrValidation)
 	}
 
 	return Amount(amount), nil

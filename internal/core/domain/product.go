@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
@@ -43,7 +44,7 @@ type ProductName string
 
 func NewProductName(name string) (ProductName, error) {
 	if name == "" {
-    return "", errors.Join(ErrInvalidProductName, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewProductName: name must not be empty\n%w\n%w", ErrInvalidProductName, core.ErrValidation)
 	}
 
 	return ProductName(name), nil

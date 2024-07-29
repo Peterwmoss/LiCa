@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
@@ -42,10 +43,15 @@ func (r *CategoryRepository) GetById(ctx context.Context, user domain.User, id u
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
-		return domain.Category{}, err
+		return domain.Category{}, fmt.Errorf("repositories.CategoryRepository.GetById: failed to get category with id: %s:\n%w", id, err)
 	}
 
-	return mappers.DbCategoryToDomain(dbCategory)
+	category, err := mappers.DbCategoryToDomain(dbCategory)
+	if err != nil {
+		return domain.Category{}, fmt.Errorf("repositories.CategoryRepository.GetById: failed to map category\n%w", err)
+	}
+
+	return category, nil
 }
 
 func (r *CategoryRepository) Get(ctx context.Context, user domain.User, name domain.CategoryName) (domain.Category, error) {
@@ -60,10 +66,15 @@ func (r *CategoryRepository) Get(ctx context.Context, user domain.User, name dom
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
-		return domain.Category{}, err
+		return domain.Category{}, fmt.Errorf("repositories.CategoryRepository.Get: failed to get category with name: %s:\n%w", name, err)
 	}
 
-	return mappers.DbCategoryToDomain(dbCategory)
+	category, err := mappers.DbCategoryToDomain(dbCategory)
+	if err != nil {
+		return domain.Category{}, fmt.Errorf("repositories.CategoryRepository.Get: failed to map category\n%w", err)
+	}
+
+	return category, nil
 }
 
 func (r *CategoryRepository) GetAll(ctx context.Context, user domain.User) ([]domain.Category, error) {
@@ -76,11 +87,16 @@ func (r *CategoryRepository) GetAll(ctx context.Context, user domain.User) ([]do
 		Relation("User").
 		Scan(ctx)
 	if err != nil {
-		return []domain.Category{}, err
+		return []domain.Category{}, fmt.Errorf("repositories.CategoryRepository.GetAll: failed to get categories for user: %v:\n%w", user, err)
 	}
 
-  slog.Debug("Found categories", "categories", dbCategories)
-	return mappers.Map(dbCategories, mappers.DbCategoryToDomain)
+	slog.Debug("Found categories", "categories", dbCategories)
+	categories, err := mappers.Map(dbCategories, mappers.DbCategoryToDomain)
+	if err != nil {
+		return []domain.Category{}, fmt.Errorf("repositories.CategoryRepository.GetAll: failed to map categories\n%w", err)
+	}
+
+	return categories, nil
 }
 
 func (r *CategoryRepository) Create(ctx context.Context, category domain.Category) error {
@@ -95,9 +111,8 @@ func (r *CategoryRepository) Create(ctx context.Context, category domain.Categor
 			Model(&dbCategory).
 			Exec(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("repositories.CategoryRepository.Create: Failed to create category: %v:\n%w", category, err)
 		}
-
 		return nil
 	})
 }
@@ -105,11 +120,11 @@ func (r *CategoryRepository) Create(ctx context.Context, category domain.Categor
 func (r *CategoryRepository) Update(ctx context.Context, category domain.Category) error {
 	existing, err := r.Get(ctx, category.User, category.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("repositories.CategoryRepository.Update: Failed to get category: %v:\n%w", category, err)
 	}
 
 	if existing.Id == uuid.Nil {
-		return ErrCategoryNotFound
+		return fmt.Errorf("repositories.CategoryRepository.Update:\n%w", ErrCategoryNotFound)
 	}
 
 	return r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
@@ -124,9 +139,8 @@ func (r *CategoryRepository) Update(ctx context.Context, category domain.Categor
 			WherePK().
 			Exec(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("repositories.CategoryRepository.Update: Failed to update category: %v:\n%w", category, err)
 		}
-
 		return nil
 	})
 }

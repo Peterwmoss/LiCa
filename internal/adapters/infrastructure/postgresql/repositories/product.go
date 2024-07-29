@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"log/slog"
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql/mappers"
@@ -41,7 +43,7 @@ func (r *ProductRepository) GetById(ctx context.Context, user domain.User, id uu
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
-		return domain.Product{}, err
+		return domain.Product{}, fmt.Errorf("repositories.ProductRepository.GetById: failed to get product with id: %s for user: %v\n%w", id, user, err)
 	}
 
 	return mappers.DbProductToDomain(dbProduct)
@@ -61,13 +63,19 @@ func (r *ProductRepository) Get(ctx context.Context, user domain.User, name doma
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
-    if errors.Is(err, sql.ErrNoRows) {
-      return domain.Product{}, nil
-    }
-		return domain.Product{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			slog.Debug(fmt.Sprintf("Product with name: %s, not found for user: %v, returning empty product", name, user))
+			return domain.Product{}, nil
+		}
+		return domain.Product{}, fmt.Errorf("repositories.ProductRepository.Get: failed to get product with name: %s for user: %v\n%w", name, user, err)
 	}
 
-	return mappers.DbProductToDomain(dbProduct)
+	product, err := mappers.DbProductToDomain(dbProduct)
+	if err != nil {
+		return domain.Product{}, fmt.Errorf("repositories.ProductRepository.Get: failed to map product\n%w", err)
+	}
+
+	return product, nil
 }
 
 func (r *ProductRepository) GetAll(ctx context.Context, user domain.User) ([]domain.Product, error) {
@@ -82,10 +90,15 @@ func (r *ProductRepository) GetAll(ctx context.Context, user domain.User) ([]dom
 		Relation("Categories.Category").
 		Scan(ctx)
 	if err != nil {
-		return []domain.Product{}, err
+		return []domain.Product{}, fmt.Errorf("repositories.ProductRepository.GetAll: failed to get products for user: %v\n%w", user, err)
 	}
 
-	return mappers.Map(dbProducts, mappers.DbProductToDomain)
+	products, err := mappers.Map(dbProducts, mappers.DbProductToDomain)
+	if err != nil {
+		return []domain.Product{}, fmt.Errorf("repositories.ProductRepository.Get: failed to map products\n%w", err)
+	}
+
+	return products, nil
 }
 
 func (r *ProductRepository) Create(ctx context.Context, product domain.Product) error {
@@ -101,9 +114,8 @@ func (r *ProductRepository) Create(ctx context.Context, product domain.Product) 
 			Model(&dbProduct).
 			Exec(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("repositories.ProductRepository.Create: failed to create product: %v\n%w", product, err)
 		}
-
 		return nil
 	})
 }
@@ -111,11 +123,11 @@ func (r *ProductRepository) Create(ctx context.Context, product domain.Product) 
 func (r *ProductRepository) Update(ctx context.Context, product domain.Product) error {
 	existing, err := r.Get(ctx, product.User, product.Name)
 	if err != nil {
-		return err
+		return fmt.Errorf("repositories.ProductRepository.Update: failed to get product: %v\n%w", product, err)
 	}
 
 	if existing.Id == uuid.Nil {
-		return ErrProductNotFound
+		return fmt.Errorf("repositories.ProductRepository.Update: product does not exist: %v\n%w", product, ErrProductNotFound)
 	}
 
 	return r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
@@ -130,9 +142,8 @@ func (r *ProductRepository) Update(ctx context.Context, product domain.Product) 
 			WherePK().
 			Exec(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("repositories.ProductRepository.Update: failed to update product: %v\n%w", product, err)
 		}
-
 		return nil
 	})
 }

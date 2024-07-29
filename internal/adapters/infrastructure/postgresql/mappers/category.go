@@ -1,6 +1,8 @@
 package mappers
 
 import (
+	"fmt"
+
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
 )
@@ -8,7 +10,7 @@ import (
 func DbCategoryToDomain(dbCategory postgresql.Category) (domain.Category, error) {
 	domainName, err := domain.NewCategoryName(dbCategory.Name)
 	if err != nil {
-		return domain.Category{}, err
+		return domain.Category{}, fmt.Errorf("mappers.DbCategoryToDomain: Failed to create category name: %s\n%w", dbCategory.Name, err)
 	}
 
 	// Ignore failed user mapping in case no user is connected to category

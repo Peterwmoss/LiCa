@@ -30,14 +30,16 @@ func (u *UserRepository) Create(ctx context.Context, user domain.User) error {
 		slog.Debug(fmt.Sprintf("creating user with email: %s", string(user.Email)))
 
 		dbUser := postgresql.User{
-      Id: user.Id,
-      Email: string(user.Email),
-    }
+			Id:    user.Id,
+			Email: string(user.Email),
+		}
 		_, err := tx.NewInsert().
 			Model(&dbUser).
 			Exec(ctx)
-
-    return err
+		if err != nil {
+			return fmt.Errorf("repositories.UserRepository.Create: failed create user: %v:\n%w", user, err)
+		}
+		return nil
 	})
 }
 
@@ -47,7 +49,7 @@ func (u *UserRepository) GetByEmail(ctx context.Context, email domain.Email) (do
 	dbUser := postgresql.User{}
 	err := u.db.NewSelect().
 		Model(&dbUser).
-		Where("? like ?", bun.Ident("u.email"), string(email)).
+		Where("? like ?", bun.Ident("email"), string(email)).
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
@@ -56,12 +58,17 @@ func (u *UserRepository) GetByEmail(ctx context.Context, email domain.Email) (do
 			return domain.User{}, nil
 		}
 
-		return domain.User{}, err
+		return domain.User{}, fmt.Errorf("repositories.UserRepository.GetByEmail: failed to get user with email: %s:\n%w", email, err)
 	}
 
-	return mappers.DbUserToDomain(dbUser)
+	user, err := mappers.DbUserToDomain(dbUser)
+	if err != nil {
+		return domain.User{}, fmt.Errorf("repositories.UserRepository.GetByEmail: failed to map user\n%w", err)
+	}
+
+	return user, nil
 }
 
 func (u *UserRepository) UpdateEmail(ctx context.Context, id uuid.UUID, email domain.Email) error {
-	panic("unimplemented")
+	return fmt.Errorf("repositories.UserRepository.UpdateEmail: not implemented")
 }

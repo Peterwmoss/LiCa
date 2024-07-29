@@ -17,6 +17,12 @@ func main() {
 	db := postgresql.Get()
 	defer db.Close()
 
+	err := db.Ping()
+	if err != nil {
+		slog.Error("Failed to connect to database", "error", err)
+		os.Exit(1)
+	}
+
 	userRepo := repositories.NewUserRepository(db)
 	userService := services.NewUserService(userRepo)
 
@@ -41,7 +47,7 @@ func main() {
 	}
 
 	if err := web.Serve(router, web.WithPort(3000)); err != nil {
-		slog.Error("Failed to start api")
+		slog.Error("Failed to start api", "error", err)
 		os.Exit(1)
 	}
 }

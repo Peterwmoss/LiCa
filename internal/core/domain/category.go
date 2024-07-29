@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
@@ -37,7 +38,7 @@ type CategoryName string
 
 func NewCategoryName(name string) (CategoryName, error) {
 	if name == "" {
-		return "", errors.Join(ErrInvalidCategoryName, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewCategoryName: name must not be empty\n%w\n%w", ErrInvalidCategoryName, core.ErrValidation)
 	}
 
 	return CategoryName(name), nil

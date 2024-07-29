@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/google/uuid"
@@ -43,7 +44,7 @@ type ListName string
 
 func NewListName(name string) (ListName, error) {
 	if name == "" {
-    return "", errors.Join(ErrInvalidListName, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewListName: name must not be empty\n%w\n%w", ErrInvalidListName, core.ErrValidation)
 	}
 
 	return ListName(name), nil

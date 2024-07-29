@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/Peterwmoss/LiCa/internal/core"
@@ -35,7 +36,7 @@ type Email string
 
 func NewEmail(email string) (Email, error) {
 	if !strings.Contains(email, "@") {
-    return "", errors.Join(ErrInvalidEmail, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewEmail: email must contain '@': '%s'\n%w\n%w", email, ErrInvalidEmail, core.ErrValidation)
 	}
 
 	return Email(email), nil

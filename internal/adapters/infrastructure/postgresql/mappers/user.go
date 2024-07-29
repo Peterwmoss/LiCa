@@ -1,6 +1,8 @@
 package mappers
 
 import (
+	"fmt"
+
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
 )
@@ -8,7 +10,7 @@ import (
 func DbUserToDomain(dbUser postgresql.User) (domain.User, error) {
 	domainEmail, err := domain.NewEmail(dbUser.Email)
 	if err != nil {
-		return domain.User{}, err
+    return domain.User{}, fmt.Errorf("mappers.DbUserToDomain: Failed to create email: %v:\n%w", dbUser.Email, err)
 	}
 
 	return domain.User{

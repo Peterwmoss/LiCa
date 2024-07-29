@@ -17,10 +17,14 @@ const (
 
 func NewOauth2Config(baseUrl string) *oauth2.Config {
 	clientId := os.Getenv("GOOGLE_CLIENT_ID")
-	slog.Debug(fmt.Sprintf("ClientID: %s", clientId))
+	if clientId == "" {
+		slog.Warn("Client ID not specified. Please set env variable GOOGLE_CLIENT_ID")
+	}
 
 	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
-	slog.Debug(fmt.Sprintf("ClientSecret: %s", clientSecret))
+	if clientSecret == "" {
+		slog.Warn("Client Secret not specified. Please set env variable GOOGLE_CLIENT_SECRET")
+	}
 
 	host := os.Getenv("LICA_HOST")
 	if host == "" {
