@@ -37,7 +37,7 @@ func (u *UserRepository) Create(ctx context.Context, user domain.User) error {
 			Model(&dbUser).
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("repositories.UserRepository.Create: failed create user: %v:\n%w", user, err)
+			return fmt.Errorf("repositories.UserRepository.Create: failed create user: %v:. Error: %w", user, err)
 		}
 		return nil
 	})
@@ -58,12 +58,12 @@ func (u *UserRepository) GetByEmail(ctx context.Context, email domain.Email) (do
 			return domain.User{}, nil
 		}
 
-		return domain.User{}, fmt.Errorf("repositories.UserRepository.GetByEmail: failed to get user with email: %s:\n%w", email, err)
+		return domain.User{}, fmt.Errorf("repositories.UserRepository.GetByEmail: failed to get user with email: %s:. Error: %w", email, err)
 	}
 
 	user, err := mappers.DbUserToDomain(dbUser)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("repositories.UserRepository.GetByEmail: failed to map user\n%w", err)
+		return domain.User{}, fmt.Errorf("repositories.UserRepository.GetByEmail: failed to map user. Error: %w", err)
 	}
 
 	return user, nil

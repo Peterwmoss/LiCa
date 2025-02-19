@@ -20,6 +20,10 @@ type Product struct {
 	User       User
 }
 
+func (p Product) String() string {
+  return fmt.Sprintf("Product{Id:%v, Name:%v, User:%v, Categories:%v}", p.Id, p.Name, p.User, p.Categories)
+}
+
 func CreateProduct(name ProductName, categories []Category, user User) Product {
 	return Product{
 		Id:         uuid.New(),
@@ -44,7 +48,7 @@ type ProductName string
 
 func NewProductName(name string) (ProductName, error) {
 	if name == "" {
-		return "", fmt.Errorf("domain.NewProductName: name must not be empty\n%w\n%w", ErrInvalidProductName, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewProductName: name must not be empty. Error: %w. Error: %w", ErrInvalidProductName, core.ErrValidation)
 	}
 
 	return ProductName(name), nil

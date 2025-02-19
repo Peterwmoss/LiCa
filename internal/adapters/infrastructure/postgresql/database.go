@@ -1,10 +1,8 @@
 package postgresql
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
 	"os"
 
 	"github.com/uptrace/bun"
@@ -36,7 +34,7 @@ func connect(config *DbConfig) *bun.DB {
 	sqlDb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqlDb, pgdialect.New())
 
-	if slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+	if os.Getenv("LICA_SHOW_SQL") != "" {
 		db.AddQueryHook(bundebug.NewQueryHook(
 			bundebug.WithVerbose(true),
 			bundebug.WithWriter(os.Stdout),

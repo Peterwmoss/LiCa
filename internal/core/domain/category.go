@@ -18,6 +18,10 @@ type Category struct {
 	User User
 }
 
+func (c Category) String() string {
+  return fmt.Sprintf("Category{Name:%v, User:%v}", c.Name, c.User)
+}
+
 func CreateCategory(name CategoryName, user User) Category {
 	return Category{
 		Id:   uuid.New(),
@@ -38,7 +42,7 @@ type CategoryName string
 
 func NewCategoryName(name string) (CategoryName, error) {
 	if name == "" {
-		return "", fmt.Errorf("domain.NewCategoryName: name must not be empty\n%w\n%w", ErrInvalidCategoryName, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewCategoryName: name must not be empty. Error: %w. Error: %w", ErrInvalidCategoryName, core.ErrValidation)
 	}
 
 	return CategoryName(name), nil

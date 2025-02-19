@@ -4,23 +4,18 @@ import (
 	"errors"
 	"io"
 	"net/http"
-)
 
-var (
-	ErrBadRequest          = errors.New("Bad Request")
-	ErrInternalServerError = errors.New("Internal Server Error")
-	ErrNotFound            = errors.New("Not Found")
-	ErrForbidden           = errors.New("Forbidden")
+	"github.com/Peterwmoss/LiCa/internal/core"
 )
 
 func HandleError(w http.ResponseWriter, err error) {
-	if errors.Is(err, ErrBadRequest) {
+	if errors.Is(err, core.ErrValidation) {
 		w.WriteHeader(http.StatusBadRequest)
 		io.WriteString(w, "Bad Request")
 		return
 	}
 
-	if errors.Is(err, ErrNotFound) || errors.Is(err, ErrForbidden) {
+	if errors.Is(err, core.ErrNotFound) || errors.Is(err, core.ErrAccessDenied) {
 		w.WriteHeader(http.StatusNotFound)
 		io.WriteString(w, "Either you don't have access or the thing you're looking for doesn't exist")
 		return

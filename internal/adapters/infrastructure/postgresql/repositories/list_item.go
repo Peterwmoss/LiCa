@@ -8,6 +8,7 @@ import (
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql/mappers"
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
 	"github.com/Peterwmoss/LiCa/internal/core/domain/ports"
 	"github.com/google/uuid"
@@ -29,7 +30,7 @@ func (r *ListItemRepository) GetAll(ctx context.Context, user domain.User, listN
 
 	err := r.db.NewSelect().
 		Model(&dbItems).
-		Where("? = ?", bun.Ident("user.email"), string(user.Email)).
+		Where("? = ?", bun.Ident("list__user.email"), string(user.Email)).
 		Relation("List").
 		Relation("List.User").
 		Relation("Category").
@@ -38,12 +39,12 @@ func (r *ListItemRepository) GetAll(ctx context.Context, user domain.User, listN
 		Relation("Product.Categories.Category").
 		Scan(ctx)
 	if err != nil {
-		return []domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetAll: failed to get items for list: %s for user: %v\n%w", listName, user, err)
+		return []domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetAll: failed to get items for list: %s for user: %v. Error: %w", listName, user, err)
 	}
 
 	items, err := mappers.Map(dbItems, mappers.DbListItemToDomain)
 	if err != nil {
-		return []domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetAll: failed to map items\n%w", err)
+		return []domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetAll: Error: %w", err)
 	}
 
 	return items, nil
@@ -54,22 +55,27 @@ func (r *ListItemRepository) GetById(ctx context.Context, user domain.User, id u
 
 	err := r.db.NewSelect().
 		Model(&dbItem).
-		Where("? = ?", bun.Ident("user.email"), string(user.Email)).
-		Where("id = ?", id).
+		Where("? = ?", bun.Ident("list__user.email"), string(user.Email)).
+		Where("? = ?", bun.Ident("li.id"), id).
 		Relation("List").
 		Relation("List.User").
 		Relation("Category").
 		Relation("Product").
 		Relation("Product.Categories").
 		Relation("Product.Categories.Category").
+		Limit(1).
 		Scan(ctx)
 	if err != nil {
-		return domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetById: failed to get item with id: %s for user: %v\n%w", id, user, err)
+		err = fmt.Errorf("repositories.ListItemRepository.GetById: failed to get item with id: %s for user: %v. Error: %w", id, user, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.ListItem{}, fmt.Errorf("%w. Error: %w", core.ErrNotFound, err)
+		}
+		return domain.ListItem{}, err
 	}
 
 	item, err := mappers.DbListItemToDomain(dbItem)
 	if err != nil {
-		return domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetById: failed to map item\n%w", err)
+		return domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.GetById: Error: %w", err)
 	}
 
 	return item, nil
@@ -90,17 +96,26 @@ func (r *ListItemRepository) Create(ctx context.Context, user domain.User, item 
 			Model(&dbItem).
 			Exec(ctx)
 
-		return fmt.Errorf("repositories.ListItemRepository.Create: failed to persit item: %v\n%w", dbItem, err)
+		if err != nil {
+			return fmt.Errorf("repositories.ListItemRepository.Create: failed to persist item: %v. Error: %w", dbItem, err)
+		}
+
+		return nil
 	})
 	if err != nil {
-		return domain.ListItem{}, fmt.Errorf("Lrepositories.istItemRepository.Create: failed to create item: %v\n%w", item, err)
+		return domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.Create: Error: %w", err)
 	}
 
-	return r.GetById(ctx, user, item.Id)
+	created, err := r.GetById(ctx, user, item.Id)
+	if err != nil {
+		return domain.ListItem{}, fmt.Errorf("repositories.ListItemRepository.Create: Error: %w", err)
+	}
+
+	return created, nil
 }
 
 func (r *ListItemRepository) Update(ctx context.Context, user domain.User, item domain.ListItem) (domain.ListItem, error) {
-  return domain.ListItem{}, errors.New("repositories.ListItemRepository.Update: not implemented")
+	return domain.ListItem{}, errors.New("repositories.ListItemRepository.Update: not implemented")
 }
 
 func (r *ListItemRepository) Remove(ctx context.Context, user domain.User, id uuid.UUID) error {
@@ -109,11 +124,11 @@ func (r *ListItemRepository) Remove(ctx context.Context, user domain.User, id uu
 
 		found, err := r.GetById(ctx, user, id)
 		if err != nil {
-			return fmt.Errorf("repositories.ListItemRepository.Remove: failed to get item: %s\n%w", id, err)
+			return fmt.Errorf("repositories.ListItemRepository.Remove: Error: %w", err)
 		}
 
 		if found.Id == uuid.Nil {
-			return fmt.Errorf("repositories.ListItemRepository.Remove: not found: %s", id)
+			return fmt.Errorf("repositories.ListItemRepository.Remove: not found: %s. Error: %w", id, core.ErrNotFound)
 		}
 
 		_, err = tx.NewDelete().
@@ -121,7 +136,7 @@ func (r *ListItemRepository) Remove(ctx context.Context, user domain.User, id uu
 			Where("id = ?", id).
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("repositories.ListItemRepository.Remove: failed to delete: %s:\n%w", id, err)
+			return fmt.Errorf("repositories.ListItemRepository.Remove: failed to delete: %s:. Error: %w", id, err)
 		}
 		return nil
 	})

@@ -22,18 +22,18 @@ func NewUserService(repository ports.UserRepository) ports.UserService {
 func (s *UserService) Create(ctx context.Context, email string) (domain.User, error) {
 	domainEmail, err := domain.NewEmail(email)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("services.UserService.Create: failed to create email\n%w", err)
+		return domain.User{}, fmt.Errorf("services.UserService.Create: Error: %w", err)
 	}
 
 	user := domain.CreateUser(domainEmail)
 	err = s.repository.Create(ctx, user)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("services.UserService.Create: failed to create user: %v\n%w", user, err)
+		return domain.User{}, fmt.Errorf("services.UserService.Create: Error: %w", err)
 	}
 
 	created, err := s.repository.GetByEmail(ctx, domainEmail)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("services.UserService.Create: failed to get created user: %v\n%w", user, err)
+		return domain.User{}, fmt.Errorf("services.UserService.Create: Error: %w", err)
 	}
 
 	return created, nil
@@ -42,12 +42,12 @@ func (s *UserService) Create(ctx context.Context, email string) (domain.User, er
 func (s *UserService) Get(ctx context.Context, email string) (domain.User, error) {
 	domainEmail, err := domain.NewEmail(email)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("services.UserService.Get: failed to create email\n%w", err)
+		return domain.User{}, fmt.Errorf("services.UserService.Get: Error: %w", err)
 	}
 
 	user, err := s.repository.GetByEmail(ctx, domainEmail)
 	if err != nil {
-		return domain.User{}, fmt.Errorf("services.UserService.Get: failed to get user with email: %s\n%w", domainEmail, err)
+		return domain.User{}, fmt.Errorf("services.UserService.Get: Error: %w", err)
 	}
 
 	return user, nil

@@ -3,6 +3,7 @@ package pages
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/interactions/web/handlers"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
@@ -26,18 +27,8 @@ func (h List) Lists(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user := request.Context().Value("user").(domain.User)
-
-	data := struct {
-		Lists []domain.List
-		User  domain.User
-	}{
-		Lists: lists,
-		User:  user,
-	}
-
-	slog.Debug("Rendering lists", "data", data)
-	err = handlers.Templates.Render(writer, "lists", data)
+	slog.Debug("Rendering lists", "data", lists)
+	err = handlers.Templates.Render(writer, "lists", lists)
 	if err != nil {
 		slog.Error("Failed to render lists", "error", err)
 	}
@@ -59,12 +50,38 @@ func (h List) List(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	type DataCategories struct {
+		Items    []domain.ListItem
+		Category domain.Category
+	}
+
+	dataCategories := []DataCategories{}
+
+	for _, item := range list.Items {
+		containedIdx := slices.IndexFunc(dataCategories, func(dataCat DataCategories) bool {
+			return item.Category.Id == dataCat.Category.Id
+		})
+    
+		if containedIdx != -1 {
+			dataCat := &dataCategories[containedIdx]
+			dataCat.Items = append(dataCat.Items, item)
+			continue
+		}
+
+		dataCategories = append(dataCategories, DataCategories{
+			Items:    []domain.ListItem{item},
+			Category: item.Category,
+		})
+	}
+
 	data := struct {
-		List domain.List
-		User domain.User
+		Name       domain.ListName
+		User       domain.User
+		Categories []DataCategories
 	}{
-		List: list,
-		User: user,
+		Name:       list.Name,
+		User:       user,
+		Categories: dataCategories,
 	}
 
 	slog.Debug("Rendering list page", "data", data)

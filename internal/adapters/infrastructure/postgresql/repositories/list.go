@@ -8,6 +8,7 @@ import (
 
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql"
 	"github.com/Peterwmoss/LiCa/internal/adapters/infrastructure/postgresql/mappers"
+	"github.com/Peterwmoss/LiCa/internal/core"
 	"github.com/Peterwmoss/LiCa/internal/core/domain"
 	"github.com/Peterwmoss/LiCa/internal/core/domain/ports"
 	"github.com/google/uuid"
@@ -46,12 +47,17 @@ func (r *ListRepository) Get(ctx context.Context, user domain.User, name domain.
 		Limit(1).
 		Scan(ctx)
 	if err != nil {
-		return domain.List{}, fmt.Errorf("repositories.ListRepository.Get: failed to get list with name: %s for user: %v:\n%w", name, user, err)
+    err = fmt.Errorf("repositories.ListRepository.Get: failed to get list with name: %s for user: %v:. Error: %w", name, user, err)
+		if errors.Is(err, sql.ErrNoRows) {
+      return domain.List{}, fmt.Errorf("%w. Error: %w", core.ErrNotFound, err)
+    }
+
+		return domain.List{}, err
 	}
 
 	list, err := mappers.DbListToDomain(dbList)
 	if err != nil {
-		return domain.List{}, fmt.Errorf("repositories.ListRepository.Get: failed to map list\n%w", err)
+		return domain.List{}, fmt.Errorf("repositories.ListRepository.Get: failed to map list. Error: %w", err)
 	}
 
 	return list, nil
@@ -71,12 +77,12 @@ func (r *ListRepository) GetAll(ctx context.Context, user domain.User) ([]domain
 		Relation("ListItems.Product.Categories.Category").
 		Scan(ctx)
 	if err != nil {
-		return []domain.List{}, fmt.Errorf("repositories.ListRepository.GetAll: failed to get lists for user: %v:\n%w", user, err)
+		return []domain.List{}, fmt.Errorf("repositories.ListRepository.GetAll: failed to get lists for user: %v:. Error: %w", user, err)
 	}
 
 	lists, err := mappers.Map(dbLists, mappers.DbListToDomain)
 	if err != nil {
-		return []domain.List{}, fmt.Errorf("repositories.ListRepository.GetAll: failed to map lists\n%w", err)
+		return []domain.List{}, fmt.Errorf("repositories.ListRepository.GetAll: failed to map lists. Error: %w", err)
 	}
 
 	return lists, nil
@@ -95,7 +101,7 @@ func (r *ListRepository) Create(ctx context.Context, list domain.List) error {
 			Model(&dbList).
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("repositories.ListRepository.Create: failed to create list: %v:\n%w", list, err)
+			return fmt.Errorf("repositories.ListRepository.Create: failed to create list: %v:. Error: %w", list, err)
 		}
 		return nil
 	})
@@ -104,11 +110,11 @@ func (r *ListRepository) Create(ctx context.Context, list domain.List) error {
 func (r *ListRepository) Update(ctx context.Context, list domain.List) error {
 	existing, err := r.Get(ctx, list.User, list.Name)
 	if err != nil {
-		return fmt.Errorf("repositories.ListRepository.Update: failed to get list: %v\n%w", list, err)
+		return fmt.Errorf("repositories.ListRepository.Update: failed to get list: %v. Error: %w", list, err)
 	}
 
 	if existing.Id == uuid.Nil {
-		return fmt.Errorf("repositories.ListRepository.Update:\n%w", ErrListNotFound)
+		return fmt.Errorf("repositories.ListRepository.Update:. Error: %w. Error: %w", ErrListNotFound, core.ErrNotFound)
 	}
 
 	return r.db.RunInTx(ctx, &sql.TxOptions{}, func(ctx context.Context, tx bun.Tx) error {
@@ -124,7 +130,7 @@ func (r *ListRepository) Update(ctx context.Context, list domain.List) error {
 			WherePK().
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("repositories.ListRepository.Update: failed to update list: %v:\n%w", list, err)
+			return fmt.Errorf("repositories.ListRepository.Update: failed to update list: %v:. Error: %w", list, err)
 		}
 		return nil
 	})

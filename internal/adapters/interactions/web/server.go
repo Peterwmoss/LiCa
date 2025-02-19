@@ -17,5 +17,5 @@ func Serve(router Router, optionsFunctions ...OptionsFunction) error {
 	router.SetupRoutes(server)
 
   slog.Info("Starting API", "options", options)
-	return http.ListenAndServe(fmt.Sprintf(":%d", options.port), server)
+	return http.ListenAndServe(fmt.Sprintf(":%d", options.Port), server)
 }

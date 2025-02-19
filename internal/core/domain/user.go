@@ -18,6 +18,10 @@ type User struct {
 	Email Email
 }
 
+func (u User) String() string {
+  return fmt.Sprintf("User{Email:%v}", u.Email)
+}
+
 func CreateUser(email Email) User {
 	return User{
 		Id:    uuid.New(),
@@ -36,7 +40,7 @@ type Email string
 
 func NewEmail(email string) (Email, error) {
 	if !strings.Contains(email, "@") {
-		return "", fmt.Errorf("domain.NewEmail: email must contain '@': '%s'\n%w\n%w", email, ErrInvalidEmail, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewEmail: email must contain '@': '%s'. Error: %w. Error: %w", email, ErrInvalidEmail, core.ErrValidation)
 	}
 
 	return Email(email), nil

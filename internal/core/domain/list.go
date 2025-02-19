@@ -20,6 +20,10 @@ type List struct {
 	User             User
 }
 
+func (l List) String() string {
+  return fmt.Sprintf("List{Id:%v, Name:%v, Items:%v, User:%v}", l.Id, l.Name, l.Items, l.User)
+}
+
 func CreateList(name ListName, user User) List {
 	return List{
 		Id:               uuid.New(),
@@ -44,7 +48,7 @@ type ListName string
 
 func NewListName(name string) (ListName, error) {
 	if name == "" {
-		return "", fmt.Errorf("domain.NewListName: name must not be empty\n%w\n%w", ErrInvalidListName, core.ErrValidation)
+		return "", fmt.Errorf("domain.NewListName: name must not be empty. Error: %w. Error: %w", ErrInvalidListName, core.ErrValidation)
 	}
 
 	return ListName(name), nil

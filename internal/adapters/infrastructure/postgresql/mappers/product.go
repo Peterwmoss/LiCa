@@ -16,14 +16,14 @@ func DbProductToDomain(dbProduct postgresql.Product) (domain.Product, error) {
 	for i, category := range dbProduct.Categories {
 		domainCategory, err := DbCategoryToDomain(category.Category)
 		if err != nil {
-			return domain.Product{}, fmt.Errorf("mappers.DbProductToDomain: Failed to map category: %v:\n%w", category.Category, err)
+			return domain.Product{}, fmt.Errorf("mappers.DbProductToDomain: Failed to map category: %v:. Error: %w", category.Category, err)
 		}
 		domainCategories[i] = domainCategory
 	}
 
 	domainName, err := domain.NewProductName(dbProduct.Name)
 	if err != nil {
-		return domain.Product{}, fmt.Errorf("mappers.DbProductToDomain: Failed to create product name: %v:\n%w", dbProduct.Name, err)
+		return domain.Product{}, fmt.Errorf("mappers.DbProductToDomain: Failed to create product name: %v:. Error: %w", dbProduct.Name, err)
 	}
 
 	isCustom := domainUser.Id != uuid.Nil

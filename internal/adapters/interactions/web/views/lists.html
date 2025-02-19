@@ -4,11 +4,11 @@
     <button hx-get="/components/lists/new" hx-target="#page">New List</button>
   </div>
 
-  {{ $count := len .Lists }}
+  {{ $count := len . }}
   {{ if eq $count 0 }}
     <p>No lists</p>
   {{ else }}
-    {{ range .Lists }}
+    {{ range . }}
       <p hx-get="/pages/lists/{{.Name}}" hx-target="#page">{{ .Name }}</p>
     {{ end }}
   {{ end }}
@@ -16,10 +16,14 @@
 
 {{ block "list" . }}
 <div>
-  <p>{{ .List.Name }}</p>
-  <button hx-get="/components/items/new?list={{ .List.Name }}" hx-target="#page">Add item</button>
-  {{ range .List.Items }}
-    <p>{{ .Product.Name }}</p>
+  <p>{{ .Name }}</p>
+  <button hx-get="/components/items/new?list={{ .Name }}" hx-target="#page">Add item</button>
+  {{ range .Categories }}
+    <p>{{ .Category.Name }}</p>
+    {{ range .Items }}
+      <p>{{ .Product.Name }} {{ .Amount }} {{ .Unit }}</p>
+      <input type="checkbox"/>
+    {{ end }}
   {{ end }}
 </div>
 {{ end }}
